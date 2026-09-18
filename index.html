@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>百万石のみくじ — 石川地酒レコメンド</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#eee9df;font-family:'Noto Sans JP',sans-serif;-webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center;min-height:100vh}
+a{color:#a8783a}a:hover{color:#8a6329}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0}
+.stage-label{font:700 11px/1 'Noto Sans JP',sans-serif;letter-spacing:.14em;color:#8a8172;text-transform:uppercase}
+.phone{width:390px;height:844px;border:10px solid #181512;border-radius:48px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.18);background:#fdfcf9}
+.app{--bg:#fdfcf9;--fg:#181512;--sub:#8f8577;--accent:#b8862f;--card:#ffffff;--cardbd:rgba(184,134,47,.32);background:var(--bg);color:var(--fg);width:100%;height:100%;box-sizing:border-box;padding:52px 22px 24px;display:flex;flex-direction:column;gap:16px;overflow:hidden;position:relative;font-family:'Noto Serif JP',serif}
+@media (max-width:520px){
+  body{display:block}
+  .stage{padding:0;gap:0}
+  .stage-label{display:none}
+  .phone{width:100vw;height:100vh;height:100dvh;border:none;border-radius:0;box-shadow:none}
+  .app{padding-top:calc(env(safe-area-inset-top) + 20px);padding-bottom:calc(env(safe-area-inset-bottom) + 20px)}
+}
+.brandline{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--cardbd);padding-bottom:12px;font-family:'Noto Sans JP',sans-serif}
+.brand{font-size:10px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase;font-weight:700}
+.stepnum{font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.05em}
+.progress-bar{height:3px;background:rgba(184,134,47,.18);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#e6c064);transition:width .3s ease}
+.q-title{font-size:21px;font-weight:600;line-height:1.5;margin:6px 0 0;white-space:pre-line}
+.q-note{font-size:11px;color:var(--sub);font-family:'Noto Sans JP',sans-serif;line-height:1.7;margin-top:-6px}
+.choices{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.choice{border:1px solid var(--accent);background:var(--card);border-radius:2px;padding:16px;font-size:14px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer;position:relative}
+.choice::after{content:'';position:absolute;left:16px;right:16px;bottom:0;height:1px;background:var(--accent);opacity:.35}
+.choice:hover{background:#fbf6ea}
+.choices.compact{gap:8px}
+.choices.compact .choice{padding:12px 16px}
+.intro-wrap,.loading-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px}
+.intro-title{font-size:22px;font-weight:700;line-height:1.6}
+.intro-sub{font-size:12px;color:var(--sub);line-height:1.8;font-family:'Noto Sans JP',sans-serif;max-width:220px}
+.primary-btn{background:linear-gradient(135deg,var(--accent),#e6c064);color:#181512;padding:14px 28px;border-radius:2px;font-weight:800;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;border:none}
+.r-eyebrow{color:var(--accent);font-weight:700;font-size:10px;letter-spacing:.14em;font-family:'Noto Sans JP',sans-serif;text-transform:uppercase}
+.bottle-wrap{display:flex;gap:16px;align-items:center}
+.bottle-ph{width:84px;height:146px;background:repeating-linear-gradient(135deg,#fff,#fff 6px,rgba(184,134,47,.16) 6px,rgba(184,134,47,.16) 7px);border:1px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font:8px/1.3 ui-monospace,monospace;color:var(--sub);text-align:center;flex-shrink:0;padding:6px;box-sizing:border-box}
+.sake-name{font-size:18px;font-weight:800;line-height:1.4}
+.brewery{font-size:11px;color:var(--sub);margin-top:4px;font-family:'Noto Sans JP',sans-serif}
+.match{font-size:11px;color:var(--accent);font-weight:800;margin-top:8px;font-family:'Noto Sans JP',sans-serif}
+.price{font-size:11px;color:var(--accent);margin-top:2px;font-family:'Noto Sans JP',sans-serif}
+.spectrum{display:flex;flex-direction:column;gap:13px;margin-top:2px;font-family:'Noto Sans JP',sans-serif}
+.spec-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--sub);font-weight:600}
+.spec-track{position:relative;height:4px;border-radius:2px;background:rgba(184,134,47,.2)}
+.spec-dot{position:absolute;top:50%;width:11px;height:11px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 0 0 3px var(--bg),0 0 8px rgba(184,134,47,.5)}
+.ghost-btn{text-align:center;padding:12px;border-radius:2px;font-size:11px;font-weight:700;font-family:'Noto Sans JP',sans-serif;color:var(--sub);cursor:pointer;border:1px solid var(--cardbd);margin-top:8px}
+.hero-ph{width:100%;height:118px;background:repeating-linear-gradient(45deg,#fff,#fff 8px,rgba(184,134,47,.16) 8px,rgba(184,134,47,.16) 9px);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font:9px ui-monospace,monospace;color:var(--sub);flex-shrink:0}
+.kura-name{font-size:18px;font-weight:800;margin-top:8px;position:relative;padding-bottom:8px}
+.kura-name::after{content:'';position:absolute;left:0;bottom:0;width:28px;height:2px;background:var(--accent)}
+.kura-est{font-size:10.5px;color:var(--sub);font-family:'Noto Sans JP',sans-serif}
+.quote{border-left:2px solid var(--accent);padding-left:11px;font-size:12.5px;line-height:1.8;margin-top:8px}
+.story{font-size:11.5px;line-height:1.75;color:var(--sub);margin-top:2px;font-family:'Noto Sans JP',sans-serif}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;font-family:'Noto Sans JP',sans-serif}
+.tag{font-size:9.5px;padding:4px 8px;border:1px solid var(--accent);color:var(--accent);border-radius:20px;font-weight:600}
+.share-row{display:flex;gap:8px;margin-top:auto}
+.share-btn{flex:1;text-align:center;padding:11px;border-radius:2px;font-size:11px;font-weight:800;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
+.share-btn.primary{background:linear-gradient(135deg,var(--accent),#e6c064);color:#181512}
+.share-btn.line{background:#181512;color:#fdfcf9}
+.share-note{font-size:9.5px;color:var(--sub);font-family:'Noto Sans JP',sans-serif;text-align:center;margin-top:-8px}
+.scroll-page{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px;margin:0 -22px;padding:0 22px 22px}
+.divider{height:1px;background:var(--cardbd);margin:2px 0}
+.yt-card{display:block;text-decoration:none;border:1px solid var(--accent);border-radius:2px;overflow:hidden;flex-shrink:0}
+.yt-thumb{position:relative;width:100%;height:96px;background:linear-gradient(135deg,#2a2420,#181512);display:flex;align-items:center;justify-content:center}
+.yt-thumb::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(184,134,47,.16) 0 10px,transparent 10px 20px)}
+.yt-duration{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font:700 9px ui-monospace,monospace;padding:2px 5px;border-radius:2px;z-index:1}
+.yt-play{position:relative;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.yt-play::after{content:'';border-style:solid;border-width:8px 0 8px 13px;border-color:transparent transparent transparent #b8862f;margin-left:3px}
+.yt-caption{padding:9px 10px;font:700 11px 'Noto Sans JP',sans-serif;color:var(--fg);border-top:1px solid var(--cardbd)}
+.map-link{text-align:center;padding:12px;border-radius:2px;font-size:11px;font-weight:700;font-family:'Noto Sans JP',sans-serif;color:var(--accent);cursor:pointer;border:1px solid var(--accent);margin-top:8px;flex-shrink:0}
+.intro-wrap .map-link{margin-top:0;min-width:220px}
+.map-wrap{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;margin:0 -22px;padding:0 22px 22px}
+.map-shape{position:relative;background:#fff;border:1px solid var(--accent);border-radius:8px;height:420px;flex-shrink:0;overflow:hidden}
+.map-pref{position:absolute;inset:0;background-image:url('./assets/ishikawa-map.png');background-size:contain;background-position:center;background-repeat:no-repeat}
+.map-pin{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 1px var(--accent);cursor:pointer;transform:translate(-50%,-50%)}
+.map-pin.ghost{background:#fff;border-color:var(--cardbd);box-shadow:none;cursor:default}
+.map-pin.selected{background:#181512;box-shadow:0 0 0 1px #181512}
+.map-pin-label{position:absolute;margin-top:14px;transform:translateX(-50%);font:600 9px 'Noto Sans JP',sans-serif;color:var(--fg);white-space:nowrap;pointer-events:none}
+.map-panel{border:1px solid var(--accent);border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.map-panel-title{font-size:15px;font-weight:800}
+.map-panel-sub{font-size:10px;color:var(--sub);font-family:'Noto Sans JP',sans-serif;margin-top:-6px}
+.map-sake-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--cardbd);font-size:12px;font-family:'Noto Sans JP',sans-serif}
+.map-sake-row:last-child{border-bottom:none}
+.map-badge{font-size:9px;font-weight:800;color:#fff;background:var(--accent);border-radius:20px;padding:3px 7px;flex-shrink:0}
+.map-hint{font-size:10.5px;color:var(--sub);font-family:'Noto Sans JP',sans-serif;text-align:center}
+.region-card{border:1px solid var(--accent);border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:9px;flex-shrink:0}
+.region-title{font-size:11.5px;font-weight:800;color:var(--accent);font-family:'Noto Sans JP',sans-serif;letter-spacing:.05em}
+.region-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;font-family:'Noto Sans JP',sans-serif;padding:6px 0;border-bottom:1px solid var(--cardbd)}
+.region-row:last-of-type{border-bottom:none}
+.region-label{color:var(--sub);flex-shrink:0}
+.region-value{color:var(--fg);font-weight:600;text-align:right}
+.region-source{font-size:9px;color:var(--sub);font-family:'Noto Sans JP',sans-serif;padding-top:4px;border-top:1px dashed var(--cardbd);line-height:1.6}
+.mascot{width:78px;margin:0 auto}
+.m-head{width:44px;height:44px;border-radius:50%;background:#fff;border:2px solid var(--accent);margin:0 auto;position:relative;z-index:2}
+.m-eye{position:absolute;width:4px;height:6px;border-radius:50%;background:#181512;top:18px}
+.m-eye.l{left:13px}.m-eye.r{right:13px}
+.m-cheek{position:absolute;width:7px;height:4px;border-radius:50%;background:rgba(184,134,47,.35);top:24px}
+.m-cheek.l{left:7px}.m-cheek.r{right:7px}
+.m-mouth{position:absolute;left:50%;top:25px;width:9px;height:4px;border-bottom:2px solid #181512;border-radius:0 0 9px 9px;transform:translateX(-50%)}
+.m-body{width:78px;height:66px;margin-top:-10px;border-radius:50%;background:radial-gradient(circle at 45% 35%,#f6e8c8,#d9b878 78%);border:2px solid var(--accent);position:relative;z-index:1;overflow:hidden;box-sizing:border-box}
+.m-rope{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(122,84,32,.4) 6px 8px),repeating-linear-gradient(-45deg,transparent 0 6px,rgba(122,84,32,.4) 6px 8px)}
+.m-label{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:#fdfcf9;border:2px solid var(--fg);display:flex;align-items:center;justify-content:center;font:700 14px 'Noto Serif JP',serif;color:var(--fg);z-index:1;box-sizing:border-box}
+.mascot-caption{font-size:9.5px;color:var(--sub);text-align:center;font-family:'Noto Sans JP',sans-serif;letter-spacing:.05em;margin-top:6px;white-space:nowrap}
+.mascot.bounce{animation:mbounce 1s ease-in-out infinite}
+@keyframes mbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ---- オープンデータ ---- */
+.od-badge{display:inline-flex;align-items:center;gap:4px;font:800 8.5px 'Noto Sans JP',sans-serif;letter-spacing:.08em;color:#fff;background:#2f6f8f;border-radius:2px;padding:2px 6px;vertical-align:middle}
+.you-card{border:1px solid #2f6f8f;background:#f3f8fa;border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;font-family:'Noto Sans JP',sans-serif}
+.you-lead{font-size:10.5px;color:#2f6f8f;font-weight:700}
+.you-num{font-family:'Noto Serif JP',serif;font-size:24px;font-weight:800;color:var(--fg);line-height:1.3}
+.you-num small{font-size:12px;font-weight:700;margin-left:2px}
+.you-text{font-size:11px;line-height:1.75;color:var(--fg)}
+.data-link{text-align:center;padding:12px;border-radius:2px;font-size:11px;font-weight:700;font-family:'Noto Sans JP',sans-serif;color:#fff;background:#2f6f8f;cursor:pointer;flex-shrink:0}
+.data-intro{font-size:11.5px;line-height:1.8;color:var(--sub);font-family:'Noto Sans JP',sans-serif}
+.chart-card{border:1px solid var(--cardbd);border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;background:#fff}
+.chart-title{font-size:13px;font-weight:800;line-height:1.5}
+.chart-headline{font-size:11px;font-family:'Noto Sans JP',sans-serif;color:var(--accent);font-weight:800;line-height:1.6}
+.chart-note{font-size:9px;color:var(--sub);font-family:'Noto Sans JP',sans-serif;line-height:1.6}
+.vbars{display:flex;align-items:flex-end;gap:2px;height:110px;position:relative;padding-top:14px}
+.vbar{flex:1;background:rgba(184,134,47,.35);border-radius:1px 1px 0 0;position:relative;min-height:1px}
+.vbar.hl{background:var(--accent)}
+.vbar.dip{background:#c9c1b3}
+.vbar-tip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font:700 8.5px 'Noto Sans JP',sans-serif;color:var(--fg);white-space:nowrap;margin-bottom:2px}
+.vaxis{display:flex;justify-content:space-between;font:600 8.5px 'Noto Sans JP',sans-serif;color:var(--sub)}
+.hbars{display:flex;flex-direction:column;gap:7px;font-family:'Noto Sans JP',sans-serif}
+.hrow{display:grid;grid-template-columns:62px 1fr 38px;align-items:center;gap:6px;font-size:10px}
+.hrow .lbl{color:var(--fg);font-weight:600}
+.hrow .val{text-align:right;color:var(--sub);font-weight:700;font-size:9.5px}
+.htrack{display:flex;flex-direction:column;gap:2px}
+.hfill{height:7px;border-radius:1px;background:var(--accent)}
+.hfill.nat{height:4px;background:#c9c1b3}
+.hrow.me .lbl{color:#2f6f8f;font-weight:800}
+.hrow.me .hfill{background:#2f6f8f}
+.legend{display:flex;gap:12px;font:600 9px 'Noto Sans JP',sans-serif;color:var(--sub)}
+.legend i{display:inline-block;width:10px;height:6px;margin-right:4px;vertical-align:middle}
+.catalog-card{border:1px solid #2f6f8f;border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;font-family:'Noto Sans JP',sans-serif}
+.catalog-card ul{margin:0;padding-left:16px;font-size:10.5px;line-height:1.8}
+.catalog-card a{font-size:11px;font-weight:700;color:#2f6f8f}
+
+/* ---- 石川県公式LINE ---- */
+.line-add-btn{display:block;text-align:center;padding:12px;border-radius:2px;background:#06c755;color:#fff;font:800 12px 'Noto Sans JP',sans-serif;text-decoration:none}
+.line-add-btn:hover{color:#fff;opacity:.9}
+.line-card{border:1px solid var(--cardbd);border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;font-family:'Noto Sans JP',sans-serif}
+.line-title{font-size:12px;font-weight:800}
+.line-sub{font-size:10.5px;color:var(--sub)}
+.sheet-bg{position:absolute;inset:0;background:rgba(24,21,18,.45);display:flex;align-items:flex-end;z-index:10}
+.sheet{width:100%;background:var(--bg);border-top:2px solid var(--accent);padding:20px 22px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;font-family:'Noto Sans JP',sans-serif}
+.sheet .line-title{font-size:14px}
+.sheet .ghost-btn{margin-top:0}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-label">百万石のみくじ — 石川地酒レコメンド診断</div>
+  <div class="phone"><div class="app" id="app"></div></div>
+</div>
+
+<script>
+// ============================================================
+// 石川県オープンデータカタログ（https://front.opendata.pref.ishikawa.lg.jp/）
+//   ・発地別観光入り込み客数（推計）  単位：千人  … 令和4年まで
+//   ・国籍別外国人宿泊客数            単位：人    … 令和6年まで
+// CSV（project/uploads/）から転記
+// ============================================================
+// 石川県公式LINE 友だち追加URL（スマホ：友だち追加／PC：QRコード表示）
+const LINE_ADD_URL = 'https://lin.ee/9lNoSAS';
+const LINE_QR_URL = 'https://page.line.me/791srqet?openQrModal=true';
+const IS_MOBILE = /iPhone|iPad|Android/i.test(navigator.userAgent) || matchMedia('(pointer:coarse)').matches;
+const LINE_FRIEND_URL = IS_MOBILE ? LINE_ADD_URL : LINE_QR_URL;
+const LINE_FRIEND_LABEL = IS_MOBILE ? '友だち追加する' : 'QRコードを表示して友だち追加';
+
+const OPEN_DATA = {
+  catalogUrl: 'https://front.opendata.pref.ishikawa.lg.jp/',
+  visitorsTrend: { // 観光入り込み客数 合計（千人）
+    years: ['H17','H18','H19','H20','H21','H22','H23','H24','H25','H26','H27','H28','H29','H30','R1','R2','R3','R4'],
+    values: [20397,20798,19466,20766,20717,21546,20985,21055,21632,21611,25018,24588,24753,24915,24899,13252,12307,18253],
+  },
+  domesticOrigin: { // 令和4年 発地別（千人・構成比%）
+    year: '令和4年',
+    rows: [
+      { key: 'pref',   label: '石川県内', value: 8558, pct: 46.9 },
+      { key: 'metro',  label: '首都圏',   value: 2934, pct: 16.1 },
+      { key: 'kansai', label: '関西圏',   value: 1754, pct: 9.6 },
+      { key: 'chukyo', label: '中京圏',   value: 1375, pct: 7.5 },
+      { key: 'toyama', label: '富山県',   value: 1406, pct: 7.7 },
+      { key: 'fukui',  label: '福井県',   value: 733,  pct: 4.0 },
+      { key: 'other',  label: 'その他',   value: 1494, pct: 8.2 }, // 長野・東北・その他の合算
+    ],
+  },
+  foreignTrend: { // 県内外国人宿泊者数 合計（人）
+    years: ['H17','H18','H19','H20','H21','H22','H23','H24','H25','H26','H27','H28','H29','H30','R1','R2','R3','R4','R5','R6'],
+    values: [108417,121330,161902,194012,131035,169113,106933,162161,242292,293956,363399,529473,606419,683862,767270,97244,7873,75206,773959,1105619],
+  },
+  foreignShare: { // 令和6年 国籍別構成比（%） 石川 / 全国（訪日外客数）
+    year: '令和6年',
+    rows: [
+      { label: '欧州',       ishikawa: 26.9, japan: 6.5 },
+      { label: '台湾',       ishikawa: 17.5, japan: 16.4 },
+      { label: 'アメリカ',   ishikawa: 11.4, japan: 7.4 },
+      { label: '中国',       ishikawa: 8.6,  japan: 18.9 },
+      { label: '東南アジア', ishikawa: 6.4,  japan: 7.8 },
+      { label: '豪州',       ishikawa: 6.1,  japan: 2.5 },
+      { label: '香港',       ishikawa: 2.9,  japan: 7.3 },
+      { label: '韓国',       ishikawa: 2.0,  japan: 23.9 },
+    ],
+  },
+};
+
+// 「どちらから？」の回答 → 発地別データのキー
+const ORIGIN_Q = {
+  key: 'origin', text: 'おまけの質問。\nどちらからお越しですか？',
+  note: '診断結果には影響しません。石川県のオープンデータから、あなたに関係する数字をお見せします。',
+  options: [
+    { label: '石川県内', value: 'pref' },
+    { label: '富山県・福井県', value: 'neighbor' },
+    { label: '首都圏', value: 'metro' },
+    { label: '関西圏', value: 'kansai' },
+    { label: '中京圏', value: 'chukyo' },
+    { label: 'その他の地域', value: 'other' },
+    { label: '海外から', value: 'overseas' },
+  ],
+};
+
+const MAP_PINS = [
+  { key: '車多酒造', label: '車多酒造（白山市）', x: 47, y: 86, active: true },
+  { key: '東酒造', label: '東酒造（小松市）', x: 32, y: 90, active: true },
+  { key: 'やちや酒造', label: 'やちや酒造（近日追加・金沢市）', x: 44, y: 68, active: false },
+  { key: '吉田酒造店', label: '吉田酒造店（近日追加・白山市）', x: 53, y: 82, active: false },
+  { key: '鹿野酒造', label: '鹿野酒造（近日追加・輪島市）', x: 55, y: 14, active: false },
+];
+
+const SAKE_DB = [
+  { name: '天狗舞 山廃仕込純米酒', brewery: '車多酒造', location: '石川県白山市', priceDisplay: '¥3,000 / 1800ml', label1: 'TENGUMAI', label2: '山廃純米', price: 'mid', sweetness: 'dry', adventurous: 'classic', servingTemp: 'hot', abv: 'high', fame: 'famous', body: 'full', aroma: 'subtle', flavorType: 'umami', acidity: 'strong', finish: 'lingering', pairing: 'meat', category: 'junmai', nama: 'hiire', method: 'traditional', character: 'distinct' },
+  { name: '天狗舞 山廃純米大吟醸', brewery: '車多酒造', location: '石川県白山市', priceDisplay: '¥6,500 / 720ml', label1: 'TENGUMAI', label2: '大吟醸', price: 'high', sweetness: 'dry', adventurous: 'classic', servingTemp: 'room', abv: 'high', fame: 'famous', body: 'full', aroma: 'strong', flavorType: 'umami', acidity: 'strong', finish: 'lingering', pairing: 'meat', category: 'ginjo', nama: 'hiire', method: 'traditional', character: 'distinct' },
+  { name: '天狗舞 しぼりたて本醸造生酒', brewery: '車多酒造', location: '石川県白山市', priceDisplay: '¥1,600 / 720ml', label1: 'TENGUMAI', label2: '生酒', price: 'low', sweetness: 'dry', adventurous: 'new', servingTemp: 'cold', abv: 'low', fame: 'insider', body: 'light', aroma: 'strong', flavorType: 'fruity', acidity: 'strong', finish: 'sharp', pairing: 'fish', category: 'ginjo', nama: 'nama', method: 'innovative', character: 'clean' },
+  { name: 'COMON(コモン) 特別純米', brewery: '車多酒造', location: '石川県白山市', priceDisplay: '¥2,400 / 720ml', label1: 'COMON', label2: '特別純米', price: 'mid', sweetness: 'dry', adventurous: 'new', servingTemp: 'cold', abv: 'low', fame: 'insider', body: 'light', aroma: 'subtle', flavorType: 'umami', acidity: 'weak', finish: 'sharp', pairing: 'fish', category: 'junmai', nama: 'hiire', method: 'innovative', character: 'clean' },
+  { name: '神泉 純米吟醸 旨口', brewery: '東酒造', location: '石川県小松市', priceDisplay: '¥2,800 / 720ml', label1: 'SHINSEN', label2: '旨口', price: 'mid', sweetness: 'sweet', adventurous: 'classic', servingTemp: 'cold', abv: 'low', fame: 'famous', body: 'light', aroma: 'strong', flavorType: 'fruity', acidity: 'weak', finish: 'lingering', pairing: 'fish', category: 'ginjo', nama: 'hiire', method: 'traditional', character: 'clean' },
+  { name: '神泉 純米大吟醸', brewery: '東酒造', location: '石川県小松市', priceDisplay: '¥5,800 / 720ml', label1: 'SHINSEN', label2: '純米大吟醸', price: 'high', sweetness: 'dry', adventurous: 'classic', servingTemp: 'cold', abv: 'high', fame: 'famous', body: 'full', aroma: 'strong', flavorType: 'umami', acidity: 'strong', finish: 'lingering', pairing: 'fish', category: 'ginjo', nama: 'hiire', method: 'traditional', character: 'distinct' },
+  { name: '神泉 大吟醸 ブルーラベル', brewery: '東酒造', location: '石川県小松市', priceDisplay: '¥4,800 / 720ml', label1: 'SHINSEN', label2: '大吟醸', price: 'high', sweetness: 'dry', adventurous: 'classic', servingTemp: 'cold', abv: 'high', fame: 'famous', body: 'light', aroma: 'strong', flavorType: 'fruity', acidity: 'weak', finish: 'sharp', pairing: 'fish', category: 'ginjo', nama: 'hiire', method: 'traditional', character: 'clean' },
+  { name: '神泉 蛍舞 うすにごり純米吟醸生酒', brewery: '東酒造', location: '石川県小松市', priceDisplay: '¥2,600 / 720ml', label1: 'SHINSEN', label2: '蛍舞', price: 'mid', sweetness: 'sweet', adventurous: 'new', servingTemp: 'cold', abv: 'low', fame: 'insider', body: 'light', aroma: 'strong', flavorType: 'fruity', acidity: 'strong', finish: 'sharp', pairing: 'fish', category: 'ginjo', nama: 'nama', method: 'innovative', character: 'distinct' },
+];
+
+const BREWERY_INFO = {
+  '車多酒造': { name: '車多酒造', est: '1823年（文政6年）創業 · 石川県白山市', heroLabel: '白山を望む蔵の風景 写真', quote: '米が語る声に、静かに耳を澄ませる。山廃仕込みは、時間をかけて自然の乳酸菌に酒母を委ねる、辛抱の技です。', story: '霊峰白山を望む加賀平野で、二百年にわたり山廃仕込みにこだわり続ける蔵元。白山の伏流水と地元の酒米を用い、手造りの技で濃醇な味わいを醸しています。', tags: ['山廃仕込み', '能登杜氏', '白山市'],
+    region: { city: '白山市', water: '手取川の伏流水', craft: '一里野・獅子吼高原の山あい景観', rice: '白山山麓の棚田米', spot: '白山比咩神社・手取峡谷' } },
+  '東酒造': { name: '東酒造', est: '1860年（万延元年）創業 · 石川県小松市', heroLabel: '石蔵と湧き水の風景 写真', quote: '水も米も酵母も、できる限り石川のものだけで醸す。隣り合う神社に湧く水を汲み、代々「神泉」を仕込んできました。', story: '国登録有形文化財の石蔵で、白山の伏流水と地元産の酒米・金沢酵母だけを使う少量仕込み。年間仕込量は控えめに抑え、一本一本に手間をかけています。', tags: ['石蔵仕込み', '神泉', '小松市'],
+    region: { city: '小松市', water: '梯川・白山の伏流水', craft: '九谷焼（九谷五彩の産地）', rice: '加賀平野の水田', spot: '那谷寺・木場潟' } },
+};
+
+const REQUIRED_Q = [
+  { key: 'price', text: 'ご予算はどれくらい？', options: [{ label: '3,000円以下', value: 'low' }, { label: '3,000〜6,000円', value: 'mid' }, { label: '6,000円以上', value: 'high' }] },
+  { key: 'sweetness', text: '甘口と辛口、お好みは？', options: [{ label: '甘口', value: 'sweet' }, { label: '辛口', value: 'dry' }] },
+  { key: 'adventurous', text: '今日は挑戦する日？\nそれとも安定志向？', options: [{ label: '定番の安心感がいい', value: 'classic' }, { label: '新しい発見がほしい', value: 'new' }] },
+  { key: 'servingTemp', text: 'どんな温度でいただきたい？', options: [{ label: '冷やして', value: 'cold' }, { label: '常温で', value: 'room' }, { label: '熱燗で', value: 'hot' }] },
+  { key: 'abv', text: 'アルコール度数は？', options: [{ label: 'しっかり高め', value: 'high' }, { label: '軽やかに低め', value: 'low' }] },
+  { key: 'fame', text: '選び方は？', options: [{ label: '有名どころで間違いなく', value: 'famous' }, { label: '通好みの一本を', value: 'insider' }] },
+];
+
+const POOL_Q = [
+  { key: 'body', text: '口当たりは軽やかが好き？\n重厚が好き？', options: [{ label: '軽やか', value: 'light' }, { label: '重厚', value: 'full' }] },
+  { key: 'aroma', text: '香りは強めが好き？\n控えめが好き？', options: [{ label: '強め', value: 'strong' }, { label: '控えめ', value: 'subtle' }] },
+  { key: 'flavorType', text: 'フルーティー系が好き？\n米の旨味系が好き？', options: [{ label: 'フルーティー系', value: 'fruity' }, { label: '米の旨味系', value: 'umami' }] },
+  { key: 'acidity', text: '酸味は強めが好き？\n弱めが好き？', options: [{ label: '強め', value: 'strong' }, { label: '弱め', value: 'weak' }] },
+  { key: 'finish', text: 'キレ重視？余韻重視？', options: [{ label: 'キレ重視', value: 'sharp' }, { label: '余韻重視', value: 'lingering' }] },
+  { key: 'pairing', text: 'よく合わせるのは？', options: [{ label: '魚料理', value: 'fish' }, { label: '肉料理', value: 'meat' }] },
+  { key: 'category', text: '純米系が好き？\n吟醸系が好き？', options: [{ label: '純米系', value: 'junmai' }, { label: '吟醸系', value: 'ginjo' }] },
+  { key: 'nama', text: '生酒が好き？\n火入れが好き？', options: [{ label: '生酒', value: 'nama' }, { label: '火入れ', value: 'hiire' }] },
+  { key: 'method', text: '伝統的製法に興味ある？\n革新的製法に興味ある？', options: [{ label: '伝統的製法', value: 'traditional' }, { label: '革新的製法', value: 'innovative' }] },
+  { key: 'character', text: 'クセのある酒が好き？\nクセのない酒が好き？', options: [{ label: 'クセあり', value: 'distinct' }, { label: 'クセなし', value: 'clean' }] },
+];
+const DIAG_COUNT = 10;
+
+// ============================================================
+// state
+// ============================================================
+const state = { page: 'intro', questions: [], qi: 0, answers: {}, result: null, mapBrewery: null, prevPage: 'intro', lineSheet: false, lineSheetShown: false };
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function setupQuestions() {
+  const pool = shuffle(POOL_Q).slice(0, DIAG_COUNT - REQUIRED_Q.length);
+  state.questions = [...shuffle([...REQUIRED_Q, ...pool]), ORIGIN_Q];
+}
+function set(patch) { Object.assign(state, patch); render(); }
+
+function answer(key, value) {
+  const answers = { ...state.answers, [key]: value };
+  const next = state.qi + 1;
+  if (next >= state.questions.length) {
+    set({ answers, qi: next, page: 'loading' });
+    setTimeout(() => computeResult(answers), 1100);
+  } else {
+    set({ answers, qi: next });
+  }
+}
+function computeResult(answers) {
+  const keys = Object.keys(answers).filter(k => k !== 'origin'); // おまけ質問は診断に使わない
+  const scored = SAKE_DB.map(s => ({ ...s, score: keys.filter(k => s[k] === answers[k]).length / keys.length }));
+  const max = Math.max(...scored.map(s => s.score));
+  const top = scored.filter(s => s.score === max);
+  set({ result: top[Math.floor(Math.random() * top.length)], page: 'result' });
+}
+function restart() { setupQuestions(); set({ page: 'intro', qi: 0, answers: {}, result: null }); }
+function openSub(page) { set({ prevPage: state.page, page }); }
+function closeSub() { set({ page: state.prevPage }); }
+function selectPin(i) { const p = MAP_PINS[i]; if (p.active) set({ mapBrewery: p.key }); }
+
+// ============================================================
+// views
+// ============================================================
+const fmt = n => n.toLocaleString('ja-JP');
+const toMan = v => (v >= 1000 ? fmt(Math.round(v)) : v.toFixed(1).replace(/\.0$/, '')) + '万';
+const man = n => toMan(n / 10000); // 人 → 万人
+const manK = n => toMan(n / 10);   // 千人 → 万人
+const nl2br = s => s.replace(/\n/g, '<br>');
+
+const mascot = (bounce) => `<div class="mascot${bounce ? ' bounce' : ''}"><div class="m-head"><span class="m-eye l"></span><span class="m-eye r"></span><div class="m-cheek l"></div><div class="m-cheek r"></div><div class="m-mouth"></div></div><div class="m-body"><div class="m-rope"></div><div class="m-label">酒</div></div></div>`;
+const brandline = (brand, right = '') => `<div class="brandline"><span class="brand">${brand}</span>${right}</div>`;
+
+function viewIntro() {
+  return brandline('百万石のみくじ') + `
+  <div class="intro-wrap">
+    ${mascot(false)}<div class="mascot-caption">石川の地酒案内・じざけまる</div>
+    <div class="intro-title">10の質問を引いて、<br>今日の一本を占う。</div>
+    <div class="intro-sub">価格・味わい・飲み方など、いくつかの質問に答えるだけ。石川の地酒から、今のあなたにぴったりの一本を「みくじ」で引き当てます。</div>
+    <div class="primary-btn" data-act="start">みくじを引く</div>
+    <div class="map-link" data-act="map">石川の地酒マップを見る</div>
+    <div class="map-link" data-act="data">オープンデータで見る石川</div>
+  </div>`;
+}
+
+function viewQuiz() {
+  const q = state.questions[state.qi];
+  const isBonus = q.key === 'origin';
+  const step = isBonus ? 'おまけ' : `Q ${state.qi + 1} / ${DIAG_COUNT}`;
+  const pct = Math.round(Math.min(state.qi, DIAG_COUNT) / DIAG_COUNT * 100);
+  return brandline('百万石のみくじ', `<span class="stepnum">${step}</span>`) + `
+  <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+  <div class="q-title">${nl2br(q.text)}</div>
+  ${q.note ? `<div class="q-note">${q.note}</div>` : ''}
+  <div class="choices${q.options.length > 4 ? ' compact' : ''}">
+    ${q.options.map((o, i) => `<div class="choice" data-act="answer" data-i="${i}">${o.label}</div>`).join('')}
+  </div>`;
+}
+
+function viewLoading() {
+  return brandline('百万石のみくじ') + `<div class="loading-wrap">${mascot(true)}<div class="intro-sub">今日の一本を<br>占っています…</div></div>`;
+}
+
+// 回答した「どちらから？」に応じた一言（オープンデータ）
+function youCard(origin) {
+  const d = OPEN_DATA.domesticOrigin, rows = Object.fromEntries(d.rows.map(r => [r.key, r]));
+  let lead, num, unit, text;
+  if (origin === 'overseas') {
+    const f = OPEN_DATA.foreignTrend, last = f.values[f.values.length - 1];
+    lead = `${OPEN_DATA.foreignShare.year}、石川県に泊まった海外からのお客さま`;
+    num = man(last); unit = '人';
+    text = '統計がある平成17年以降で過去最高。なかでも<b>欧州</b>からのお客さまの割合は26.9%と、全国（6.5%）の約4倍です。';
+  } else if (origin === 'neighbor') {
+    const v = rows.toyama.value + rows.fukui.value;
+    lead = `${d.year}、富山県・福井県から石川県を訪れた人`;
+    num = manK(v); unit = '人';
+    text = `お隣の県から、年間で延べ${manK(v)}人。石川県外から訪れる人のおよそ4〜5人に1人が北陸のお隣さんです。`;
+  } else {
+    const r = rows[origin] || rows.other;
+    lead = origin === 'pref' ? `${d.year}、県内で観光地を訪れた石川県民` : `${d.year}、${r.label === 'その他' ? '北陸・三大都市圏以外' : r.label}から石川県を訪れた人`;
+    num = manK(r.value); unit = '人';
+    text = `石川県の観光入り込み客数（延べ${manK(OPEN_DATA.visitorsTrend.values.at(-1))}人）のうち<b>${r.pct}%</b>。${origin === 'pref' ? '地元の人こそ、地酒のいちばんの伝え手です。' : 'あなたもその一人として、石川の地酒を楽しんでください。'}`;
+  }
+  return `<div class="you-card">
+    <div class="you-lead"><span class="od-badge">OPEN DATA</span> ${lead}</div>
+    <div class="you-num">${num}<small>${unit}</small></div>
+    <div class="you-text">${text}</div>
+  </div>`;
+}
+
+function viewResult() {
+  const r = state.result, b = BREWERY_INFO[r.brewery];
+  const pos = (v, a) => v === a ? 25 : 75;
+  const spec = [
+    { left: '甘口', right: '辛口', pct: pos(r.sweetness, 'sweet') },
+    { left: '淡麗', right: '濃醇', pct: pos(r.body, 'light') },
+    { left: '穏やか', right: '香り高い', pct: pos(r.aroma, 'subtle') },
+  ];
+  const fs = OPEN_DATA.foreignShare, top3 = fs.rows.slice(0, 3).map(x => x.label).join('・');
+  const videoUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(r.brewery + ' ' + r.name)}`;
+  return `<div class="r-eyebrow">百万石のみくじ結果</div>
+  <div class="scroll-page">
+    <div class="bottle-wrap"><div class="bottle-ph">${r.label1}<br>${r.label2}</div><div><div class="sake-name">${r.name}</div><div class="brewery">${r.brewery} · ${r.location}</div><div class="match">マッチ度 100%</div><div class="price">${r.priceDisplay}</div></div></div>
+    <div class="spectrum">${spec.map(s => `<div><div class="spec-labels"><span>${s.left}</span><span>${s.right}</span></div><div class="spec-track"><div class="spec-dot" style="left:${s.pct}%"></div></div></div>`).join('')}</div>
+    <div class="divider"></div>
+    <div class="hero-ph">${b.heroLabel}</div>
+    <div class="kura-name">${b.name}</div>
+    <div class="kura-est">${b.est}</div>
+    <div class="quote">${b.quote}</div>
+    <div class="story">${b.story}</div>
+    <div class="tags">${b.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    <div class="region-card">
+      <div class="region-title">この一本の産地 · ${b.region.city}</div>
+      <div class="region-row"><span class="region-label">水源</span><span class="region-value">${b.region.water}</span></div>
+      <div class="region-row"><span class="region-label">米・田</span><span class="region-value">${b.region.rice}</span></div>
+      <div class="region-row"><span class="region-label">伝統工芸・景観</span><span class="region-value">${b.region.craft}</span></div>
+      <div class="region-row"><span class="region-label">立ち寄りスポット</span><span class="region-value">${b.region.spot}</span></div>
+      <div class="region-row"><span class="region-label">石川県 観光入り込み客数</span><span class="region-value">約${manK(OPEN_DATA.visitorsTrend.values.at(-1))}人（令和4年）</span></div>
+      <div class="region-row"><span class="region-label">外国人宿泊客の主な地域</span><span class="region-value">${top3}（${fs.year}）</span></div>
+      <div class="region-source">出典：石川県オープンデータカタログ「発地別観光入り込み客数（推計）」「国籍別外国人宿泊客数」</div>
+    </div>
+    ${youCard(state.answers.origin)}
+    <div class="data-link" data-act="data">オープンデータで見る石川 →</div>
+    <a class="yt-card" href="${videoUrl}" target="_blank" rel="noopener"><div class="yt-thumb"><div class="yt-play"></div><span class="yt-duration">3:24</span></div><div class="yt-caption">▶ ${b.name}の紹介動画をYouTubeで見る</div></a>
+    <div class="map-link" data-act="map">地酒マップで立ち位置を見る</div>
+    <div class="share-row"><div class="share-btn primary" data-act="line-recommend">友だちに勧める</div><div class="share-btn line" data-act="line-save">LINEで保存</div></div>
+    <div class="share-note">「LINEで保存」でKeepメモに残せば、酒屋さんで見せられます</div>
+    <div class="ghost-btn" data-act="restart">もう一度診断する</div>
+  </div>`;
+}
+
+function viewMap() {
+  const recName = state.result && state.result.name;
+  const mb = state.mapBrewery && BREWERY_INFO[state.mapBrewery];
+  const panel = mb ? `<div class="map-panel">
+      <div class="map-panel-title">${mb.name}</div>
+      <div class="map-panel-sub">${mb.est}</div>
+      ${SAKE_DB.filter(s => s.brewery === state.mapBrewery).map(s => `<div class="map-sake-row"><span>${s.name}</span>${s.name === recName ? '<span class="map-badge">今回のおすすめ</span>' : ''}</div>`).join('')}
+    </div>` : '';
+  return brandline('石川の地酒マップ') + `
+  <div class="map-wrap">
+    <div class="map-hint">酒蔵をタップすると、造っている銘柄が分かります</div>
+    <div class="map-shape">
+      <div class="map-pref"></div>
+      ${MAP_PINS.map((p, i) => `<div class="map-pin${p.active ? '' : ' ghost'}${state.mapBrewery === p.key ? ' selected' : ''}" style="left:${p.x}%;top:${p.y}%" data-act="pin" data-i="${i}"></div>`).join('')}
+      ${MAP_PINS.map(p => `<div class="map-pin-label" style="left:${p.x}%;top:${p.y}%">${p.label}</div>`).join('')}
+    </div>
+    ${panel}
+    <div class="ghost-btn" data-act="close">閉じる</div>
+  </div>`;
+}
+
+// ---- オープンデータ画面 ----
+function vbarChart({ years, values }, { hl = [], dip = [], tips = {} }) {
+  const max = Math.max(...values);
+  const bars = values.map((v, i) => {
+    const y = years[i], cls = hl.includes(y) ? ' hl' : dip.includes(y) ? ' dip' : '';
+    return `<div class="vbar${cls}" style="height:${v / max * 100}%" title="${y}：${fmt(v)}">${tips[y] ? `<span class="vbar-tip">${tips[y]}</span>` : ''}</div>`;
+  }).join('');
+  return `<div class="vbars">${bars}</div><div class="vaxis"><span>${years[0]}</span><span>${years[years.length - 1]}</span></div>`;
+}
+
+function viewData() {
+  const vt = OPEN_DATA.visitorsTrend, ft = OPEN_DATA.foreignTrend, fs = OPEN_DATA.foreignShare, d = OPEN_DATA.domesticOrigin;
+  const origin = state.answers.origin;
+  const meKeys = origin === 'neighbor' ? ['toyama', 'fukui'] : [origin];
+  const fmax = Math.max(...fs.rows.flatMap(r => [r.ishikawa, r.japan]));
+  const dmax = Math.max(...d.rows.map(r => r.pct));
+  return brandline('オープンデータで見る石川', '<span class="od-badge">OPEN DATA</span>') + `
+  <div class="map-wrap">
+    <div class="data-intro">このアプリの数字は、石川県が公開している<b>オープンデータカタログ</b>のデータを使っています。地酒の向こう側にある「石川を訪れる人」の姿をのぞいてみましょう。</div>
+
+    <div class="chart-card">
+      <div class="chart-title">石川県を訪れる人（観光入り込み客数）</div>
+      <div class="chart-headline">北陸新幹線 金沢開業の平成27年に2,500万人を突破。コロナ禍で落ち込み、令和4年は1,825万人まで回復。</div>
+      ${vbarChart(vt, { hl: ['H27', 'R4'], dip: ['R2', 'R3'], tips: { H27: '2,502万', R4: '1,825万' } })}
+      <div class="chart-note">単位：延べ人数（推計）／出典：発地別観光入り込み客数（推計）</div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">どこから来ている？（${d.year}）</div>
+      <div class="chart-headline">約半分は石川県民。県外では首都圏が最多です。</div>
+      <div class="hbars">${d.rows.map(r => `<div class="hrow${meKeys.includes(r.key) ? ' me' : ''}"><span class="lbl">${r.label}${meKeys.includes(r.key) ? '（あなた）' : ''}</span><div class="htrack"><div class="hfill" style="width:${r.pct / dmax * 100}%"></div></div><span class="val">${r.pct}%</span></div>`).join('')}</div>
+      <div class="chart-note">「その他」は長野県・東北（宮城・福島）・その他地域の合計</div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">海外からの宿泊客</div>
+      <div class="chart-headline">令和6年は${man(ft.values.at(-1))}人で過去最高。コロナ前（令和元年 ${man(ft.values[14])}人）を大きく上回りました。</div>
+      ${vbarChart(ft, { hl: ['R6'], dip: ['R2', 'R3', 'R4'], tips: { R1: man(ft.values[14]), R6: man(ft.values.at(-1)) } })}
+      <div class="chart-note">単位：人（県内外国人宿泊者数）／出典：国籍別外国人宿泊客数</div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">どの国・地域から？（${fs.year}）</div>
+      <div class="chart-headline">石川は<b>欧州</b>からの割合が全国の約4倍。日本酒を世界へ届けるチャンスが、ここにあります。</div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>石川県</span><span><i style="background:#c9c1b3"></i>全国（訪日外客数）</span></div>
+      <div class="hbars">${fs.rows.map(r => `<div class="hrow"><span class="lbl">${r.label}</span><div class="htrack"><div class="hfill" style="width:${r.ishikawa / fmax * 100}%"></div><div class="hfill nat" style="width:${r.japan / fmax * 100}%"></div></div><span class="val">${r.ishikawa}%</span></div>`).join('')}</div>
+      <div class="chart-note">構成比。「その他」を除く／全国値の出典：日本政府観光局（JNTO）暫定値（カタログ掲載データより）</div>
+    </div>
+
+    <div class="catalog-card">
+      <div class="region-title" style="color:#2f6f8f">このアプリで使ったオープンデータ</div>
+      <ul><li>発地別観光入り込み客数（推計）</li><li>国籍別外国人宿泊客数</li></ul>
+      <div class="data-intro">石川県オープンデータカタログでは、観光・人口・防災など、さまざまなデータが公開されています。</div>
+      <a href="${OPEN_DATA.catalogUrl}" target="_blank" rel="noopener">石川県オープンデータカタログを見る →</a>
+    </div>
+
+    ${lineCard()}
+
+    <div class="ghost-btn" data-act="close">閉じる</div>
+  </div>`;
+}
+
+// 石川県公式LINEの友だち追加案内（診断の本体とは分けて表示）
+const lineCard = () => `<div class="line-card">
+    <div class="line-title">石川県公式LINEと友だちになりませんか？</div>
+    <div class="line-sub">石川県の最新情報を受け取れます。</div>
+    <a class="line-add-btn" href="${LINE_FRIEND_URL}" target="_blank" rel="noopener">${LINE_FRIEND_LABEL}</a>
+  </div>`;
+const lineSheet = () => `<div class="sheet-bg" data-act="sheet-close"><div class="sheet">
+    <div class="line-title">石川県公式LINEと友だちになりませんか？</div>
+    <div class="line-sub">石川県の最新情報を受け取れます。</div>
+    <a class="line-add-btn" href="${LINE_FRIEND_URL}" target="_blank" rel="noopener">${LINE_FRIEND_LABEL}</a>
+    <div class="ghost-btn" data-act="sheet-close">閉じる</div>
+  </div></div>`;
+
+// LINEで送る（自分のKeepメモ／友だち・グループ）→ 戻ったら友だち追加を案内（1回だけ）
+function shareToLine(text) {
+  const url = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(location.href)}&text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank', 'noopener');
+  if (!state.lineSheetShown) set({ lineSheet: true, lineSheetShown: true });
+}
+const saveToLine = () => shareToLine(`百万石のみくじで引いた今日の一本：${state.result.name}（${state.result.brewery}）`);
+const recommendOnLine = () => shareToLine(`石川の地酒みくじで「${state.result.name}」（${state.result.brewery}）が出たよ。あなたも今日の一本を占ってみて！`);
+
+const VIEWS = { intro: viewIntro, quiz: viewQuiz, loading: viewLoading, result: viewResult, map: viewMap, data: viewData };
+const root = document.getElementById('app');
+function render() { root.innerHTML = VIEWS[state.page]() + (state.lineSheet ? lineSheet() : ''); }
+
+root.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const i = Number(el.dataset.i);
+  switch (el.dataset.act) {
+    case 'start': set({ page: 'quiz' }); break;
+    case 'answer': { const q = state.questions[state.qi]; answer(q.key, q.options[i].value); break; }
+    case 'restart': restart(); break;
+    case 'map': openSub('map'); break;
+    case 'data': openSub('data'); break;
+    case 'close': closeSub(); break;
+    case 'pin': selectPin(i); break;
+    case 'line-save': saveToLine(); break;
+    case 'line-recommend': recommendOnLine(); break;
+    case 'sheet-close': if (e.target === el) set({ lineSheet: false }); break;
+  }
+});
+
+setupQuestions();
+render();
+</script>
+</body>
+</html>
