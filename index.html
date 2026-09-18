@@ -172,7 +172,7 @@ const LINE_ADD_URL = 'https://lin.ee/9lNoSAS';
 const LINE_QR_URL = 'https://page.line.me/791srqet?openQrModal=true';
 const IS_MOBILE = /iPhone|iPad|Android/i.test(navigator.userAgent) || matchMedia('(pointer:coarse)').matches;
 const LINE_FRIEND_URL = IS_MOBILE ? LINE_ADD_URL : LINE_QR_URL;
-const LINE_FRIEND_LABEL = IS_MOBILE ? '友だち追加する' : 'QRコードを表示して友だち追加';
+const LINE_FRIEND_LABEL = IS_MOBILE ? '石川県公式LINEを見る' : 'QRコードで石川県公式LINEを見る';
 
 const OPEN_DATA = {
   catalogUrl: 'https://front.opendata.pref.ishikawa.lg.jp/',
@@ -508,13 +508,13 @@ function viewData() {
 
 // 石川県公式LINEの友だち追加案内（診断の本体とは分けて表示）
 const lineCard = () => `<div class="line-card">
-    <div class="line-title">石川県公式LINEと友だちになりませんか？</div>
-    <div class="line-sub">石川県の最新情報を受け取れます。</div>
+    <div class="line-title">このアプリは、石川県の日本酒ハッカソンから生まれました</div>
+    <div class="line-sub">ハッカソンの詳細は、石川県公式LINEで紹介中です。</div>
     <a class="line-add-btn" href="${LINE_FRIEND_URL}" target="_blank" rel="noopener">${LINE_FRIEND_LABEL}</a>
   </div>`;
 const lineSheet = () => `<div class="sheet-bg" data-act="sheet-close"><div class="sheet">
-    <div class="line-title">石川県公式LINEと友だちになりませんか？</div>
-    <div class="line-sub">石川県の最新情報を受け取れます。</div>
+    <div class="line-title">このアプリは、石川県の日本酒ハッカソンから生まれました</div>
+    <div class="line-sub">ハッカソンの詳細は、石川県公式LINEで紹介中です。</div>
     <a class="line-add-btn" href="${LINE_FRIEND_URL}" target="_blank" rel="noopener">${LINE_FRIEND_LABEL}</a>
     <div class="ghost-btn" data-act="sheet-close">閉じる</div>
   </div></div>`;
