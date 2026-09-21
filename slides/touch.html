@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Noto+Serif+JP:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 /* ===== スライド共通 ===== */
-:root{--bg:#fdfcf9;--fg:#181512;--sub:#8f8577;--accent:#b8862f;--gold2:#e6c064;--bd:rgba(184,134,47,.32);--od:#2f6f8f;--line:#06c755;
+:root{--bg:#fdfcf9;--fg:#181512;--sub:#8f8577;--accent:#1B335A;--gold2:#2f5a94;--bd:rgba(27,51,90,.30);--od:#1B335A;--line:#06c755;
   --serif:'Noto Serif JP','Yu Mincho','YuMincho','Hiragino Mincho ProN',serif;--sans:'Noto Sans JP','Yu Gothic','YuGothic','Hiragino Sans','Meiryo',sans-serif}
 html,body{margin:0;height:100%;background:#1c1916;overflow:hidden}
 .deck{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center}
@@ -30,13 +30,13 @@ h2{font-size:72px;font-weight:800;line-height:1.35;margin-top:18px}
 .lead{font-size:34px;line-height:1.7;color:var(--sub);margin-top:24px}
 /* じざけまる */
 .mascot{width:78px;display:inline-block}
-.m-slip{width:62px;height:94px;margin:0 auto;box-sizing:border-box;background:linear-gradient(#fff,#fffdf7);border:2px solid var(--accent);border-radius:5px;position:relative;display:flex;flex-direction:column;align-items:center;padding-top:7px;box-shadow:0 2px 0 rgba(184,134,47,.18)}
-.m-slip::before{content:'';position:absolute;left:10px;right:10px;top:31px;border-top:1px dashed rgba(184,134,47,.45)}
+.m-slip{width:62px;height:94px;margin:0 auto;box-sizing:border-box;background:linear-gradient(#fff,#fffdf7);border:2px solid var(--accent);border-radius:5px;position:relative;display:flex;flex-direction:column;align-items:center;padding-top:7px;box-shadow:0 2px 0 rgba(27,51,90,.18)}
+.m-slip::before{content:'';position:absolute;left:10px;right:10px;top:31px;border-top:1px dashed rgba(27,51,90,.45)}
 .m-kanji{font:700 20px/1 'Noto Serif JP','Yu Mincho',serif;color:var(--accent)}
 .m-face{position:relative;width:100%;flex:1}
 .m-eye{position:absolute;width:5px;height:7px;border-radius:50%;background:#181512;top:22px}
 .m-eye.l{left:16px}.m-eye.r{right:16px}
-.m-cheek{position:absolute;width:8px;height:5px;border-radius:50%;background:rgba(184,134,47,.38);top:31px}
+.m-cheek{position:absolute;width:8px;height:5px;border-radius:50%;background:rgba(27,51,90,.38);top:31px}
 .m-cheek.l{left:9px}.m-cheek.r{right:9px}
 .m-mouth{position:absolute;left:50%;top:31px;width:10px;height:5px;border-bottom:2px solid #181512;border-radius:0 0 10px 10px;transform:translateX(-50%)}
 .qr{background:#fff;padding:14px;border:2px solid var(--accent);display:inline-block;line-height:0}
@@ -69,7 +69,8 @@ body.static #help,body.static #timer,body.static #notes{display:none!important}
   @page{size:1920px 1080px;margin:0}
   html,body{height:auto;overflow:visible;background:#fdfcf9}
   .deck{position:static;transform:none!important}
-  .slide{display:flex!important;position:relative;break-after:page}
+  .slide{display:flex!important;position:relative;width:1920px;height:1080px;break-after:page}
+  .deck{width:1920px;height:auto}
   .slide *,.slide *::after{animation:none!important}
   .feature .d b{background-size:100% 100%!important}
   #notes,#help,#timer{display:none!important}
