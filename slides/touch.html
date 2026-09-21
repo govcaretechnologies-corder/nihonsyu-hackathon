@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Touch｜百万石のみくじ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Noto+Serif+JP:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== スライド共通 ===== */
+:root{--bg:#fdfcf9;--fg:#181512;--sub:#8f8577;--accent:#b8862f;--gold2:#e6c064;--bd:rgba(184,134,47,.32);--od:#2f6f8f;--line:#06c755;
+  --serif:'Noto Serif JP','Yu Mincho','YuMincho','Hiragino Mincho ProN',serif;--sans:'Noto Sans JP','Yu Gothic','YuGothic','Hiragino Sans','Meiryo',sans-serif}
+html,body{margin:0;height:100%;background:#1c1916;overflow:hidden}
+.deck{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center}
+.slide{position:absolute;inset:0;background:var(--bg);color:var(--fg);font-family:var(--sans);box-sizing:border-box;padding:110px 140px;display:none;flex-direction:column;justify-content:center}
+.slide.active{display:flex}
+.slide::before{content:'';position:absolute;inset:36px;border:2px solid var(--bd);pointer-events:none}
+.pageno{position:absolute;right:70px;bottom:56px;font:700 22px var(--sans);color:var(--sub);letter-spacing:.1em}
+.brandmark{position:absolute;left:70px;bottom:56px;font:700 20px var(--sans);color:var(--accent);letter-spacing:.2em}
+.note{display:none}
+#notes{position:fixed;left:0;right:0;bottom:0;max-height:40vh;overflow:auto;background:rgba(24,21,18,.94);color:#fdfcf9;font:16px/1.8 var(--sans);padding:14px 22px;display:none;z-index:10;white-space:pre-line}
+#notes.show{display:block}
+#timer{position:fixed;left:12px;top:10px;color:#8f8577;font:700 14px var(--sans);z-index:11;display:none}
+body.notes-on #timer{display:block}
+body.started #help{display:none}
+#help{position:fixed;right:12px;top:10px;color:#8f8577;font:12px var(--sans);z-index:10}
+.eyebrow{font:800 26px var(--sans);letter-spacing:.2em;color:var(--accent)}
+h1,h2{font-family:var(--serif);margin:0}
+h2{font-size:72px;font-weight:800;line-height:1.35;margin-top:18px}
+.lead{font-size:34px;line-height:1.7;color:var(--sub);margin-top:24px}
+/* じざけまる */
+.mascot{width:78px;display:inline-block}
+.m-slip{width:62px;height:94px;margin:0 auto;box-sizing:border-box;background:linear-gradient(#fff,#fffdf7);border:2px solid var(--accent);border-radius:5px;position:relative;display:flex;flex-direction:column;align-items:center;padding-top:7px;box-shadow:0 2px 0 rgba(184,134,47,.18)}
+.m-slip::before{content:'';position:absolute;left:10px;right:10px;top:31px;border-top:1px dashed rgba(184,134,47,.45)}
+.m-kanji{font:700 20px/1 'Noto Serif JP','Yu Mincho',serif;color:var(--accent)}
+.m-face{position:relative;width:100%;flex:1}
+.m-eye{position:absolute;width:5px;height:7px;border-radius:50%;background:#181512;top:22px}
+.m-eye.l{left:16px}.m-eye.r{right:16px}
+.m-cheek{position:absolute;width:8px;height:5px;border-radius:50%;background:rgba(184,134,47,.38);top:31px}
+.m-cheek.l{left:9px}.m-cheek.r{right:9px}
+.m-mouth{position:absolute;left:50%;top:31px;width:10px;height:5px;border-bottom:2px solid #181512;border-radius:0 0 10px 10px;transform:translateX(-50%)}
+.qr{background:#fff;padding:14px;border:2px solid var(--accent);display:inline-block;line-height:0}
+.qr img,.qr canvas{width:100%;height:auto}
+.url{font:700 22px var(--sans);color:var(--sub);margin-top:10px;word-break:break-all}
+/* 言葉の途中で改行しない（文節単位で折り返す：Chrome/Edge 119+） */
+.slide{word-break:auto-phrase;line-break:strict}
+h1,h2,.t,.who,.msg,.team{text-wrap:balance}
+.d,.scene,.cap,.lead{text-wrap:pretty}
+.nw{white-space:nowrap}
+/* アニメーション */
+@keyframes rise{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:scale(0) rotate(-14deg)}65%{opacity:1;transform:scale(3.6) rotate(4deg)}100%{transform:scale(3.2)}}
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.slide.active .eyebrow,.slide.active h1,.slide.active h2,.slide.active .team,.slide.active .sub,.slide.active .lead{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+.slide.active h1,.slide.active h2{animation-delay:.1s}
+.slide.active .sub,.slide.active .lead{animation-delay:.2s}
+.slide.active [data-seq]{animation:rise .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.3s + var(--i) * .14s)}
+.slide.active .eyebrow::after{content:'';display:block;width:64px;height:3px;background:var(--accent);margin-top:14px;transform-origin:left;animation:grow .6s .2s ease both}
+.cover .eyebrow::after{display:none}
+.slide.active.cover .mascot{animation:pop .9s cubic-bezier(.3,1.4,.5,1) both,floaty 3s 1s ease-in-out infinite}
+.slide.active .feature .d b{background:linear-gradient(transparent 62%,rgba(6,199,85,.28) 62%) no-repeat;background-size:0 100%;animation:mark .8s 1.4s ease forwards}
+@keyframes mark{to{background-size:100% 100%}}
+/* 印刷（PDF出力）・静止表示（?static）用：アニメーションを止め、全スライドを1ページずつ */
+body.static .slide *,body.static .slide *::after{animation:none!important}
+body.static .feature .d b{background-size:100% 100%!important}
+body.static #help,body.static #timer,body.static #notes{display:none!important}
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{height:auto;overflow:visible;background:#fdfcf9}
+  .deck{position:static;transform:none!important}
+  .slide{display:flex!important;position:relative;break-after:page}
+  .slide *,.slide *::after{animation:none!important}
+  .feature .d b{background-size:100% 100%!important}
+  #notes,#help,#timer{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){.slide.active *,.slide.active *::after{animation:none!important;background-size:100% 100%!important}}
+
+/* ===== Pitch ===== */
+.cover{align-items:center;justify-content:center;text-align:center;gap:26px}
+.cover .mascot{transform:scale(3.2);margin:90px 0 110px}
+.team{font:800 40px var(--sans);letter-spacing:.14em;color:var(--accent)}
+.cover h1{font-size:112px;font-weight:800;letter-spacing:.06em}
+.cover .sub{font-size:34px;color:var(--sub)}
+.cards{display:grid;gap:34px;margin-top:60px}
+.cards.c3{grid-template-columns:repeat(3,1fr)}
+.cards.c4{grid-template-columns:repeat(4,1fr)}
+.card{border:2px solid var(--accent);background:#fff;padding:42px 38px;display:flex;flex-direction:column;gap:18px}
+.card .num{font:800 26px var(--sans);color:var(--accent);letter-spacing:.1em}
+.card .t{font:800 40px/1.45 var(--serif)}
+.card .d{font-size:26px;line-height:1.7;color:var(--sub)}
+.flow{display:flex;align-items:stretch;gap:24px;margin-top:56px}
+.step{flex:1;border:2px solid var(--accent);background:#fff;padding:34px 30px;display:flex;flex-direction:column;gap:14px}
+.step .k{font:800 24px var(--sans);color:var(--accent);letter-spacing:.12em}
+.step .t{font:800 38px/1.4 var(--serif)}
+.step .d{font-size:25px;line-height:1.7;color:var(--sub)}
+.arrow{align-self:center;font-size:48px;color:var(--accent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:50px;flex:1}
+.feature{border:2px solid var(--c);padding:44px;display:flex;flex-direction:column;gap:20px;background:#fff}
+.badge{align-self:flex-start;font:800 22px var(--sans);letter-spacing:.14em;color:#fff;background:var(--c);padding:6px 16px}
+.feature .t{font:800 44px/1.45 var(--serif)}
+.feature .d{font-size:27px;line-height:1.75;color:var(--fg)}
+.feature .big{font:800 88px/1 var(--serif);color:var(--c)}
+.feature .big small{font-size:34px;margin-left:8px}
+.feature .cap{font-size:22px;color:var(--sub)}
+.src{margin-top:auto;border-top:1px dashed var(--bd);padding-top:18px;font:800 24px/1.6 var(--sans);color:var(--od)}
+.src a{font:700 22px var(--sans);color:var(--od);word-break:break-all}
+.users{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:50px}
+.user{border:2px solid var(--accent);background:#fff;padding:36px;display:flex;flex-direction:column;gap:14px}
+.user .who{font:800 38px/1.4 var(--serif)}
+.user .scene{font-size:25px;line-height:1.7;color:var(--sub)}
+.user .scene b{color:var(--fg)}
+.try{display:flex;align-items:center;gap:40px;margin-top:auto}
+.try .qr{width:200px}
+.try .msg{font:800 40px/1.5 var(--serif)}
+
+/* ===== Touch ===== */
+.hero{display:flex;gap:80px;align-items:center;flex:1}
+.hero-text{flex:1}
+.hero .try{margin-top:50px;flex-direction:column;align-items:flex-start;gap:14px}
+.hero .try .qr{width:240px}
+.phone-live{width:400px;height:820px;border:12px solid #181512;border-radius:52px;overflow:hidden;flex-shrink:0;background:#fdfcf9}
+.phone-live iframe{width:100%;height:100%;border:0}
+.screens{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:50px}
+.scr{border:2px solid var(--accent);background:#fff;padding:30px 32px;display:flex;flex-direction:column;gap:10px}
+.scr.od{border-color:var(--od)}
+.scr .n{font:800 24px var(--sans);color:var(--accent)}
+.scr.od .n{color:var(--od)}
+.scr .t{font:800 36px/1.4 var(--serif)}
+.scr .d{font-size:24px;line-height:1.65;color:var(--sub)}
+.muted{color:var(--sub)}
+.od-num{font:800 64px/1.3 var(--serif);color:var(--od)}
+.facts .card{border-color:var(--od)}
+.facts .big{font:800 76px/1.1 var(--serif);color:var(--od)}
+.facts .big small{font-size:30px;margin-left:6px}
+.quote-box{margin-top:auto;border-left:6px solid var(--line);background:#fff;padding:26px 34px;font:800 34px/1.6 var(--serif)}
+.quote-box span{font:500 28px var(--sans);color:var(--sub)}
+.hint{display:inline-block;margin-top:10px;color:var(--od);font-weight:800}
+.code{margin:0;background:#181512;color:#fdfcf9;font:500 22px/1.6 ui-monospace,Consolas,monospace;padding:22px 26px;white-space:pre;overflow:hidden}
+.code .c{color:#9fd8b4}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<!-- 1 表紙：触ってみてください -->
+<section class="slide">
+  <div class="eyebrow">TOUCH! SESSION</div>
+  <div class="hero">
+    <div class="hero-text">
+      <h2>百万石のみくじ<br>触ってみてください</h2>
+      <div class="lead">スマホでQRを読み取るだけ。インストール不要、約1分で診断できます。</div>
+      <div class="try"><div class="qr" data-qr></div><div class="url">https://govcaretechnologies-corder.github.io/nihonsyu-hackathon/</div></div>
+    </div>
+    <div class="phone-live"><iframe src="https://govcaretechnologies-corder.github.io/nihonsyu-hackathon/" title="百万石のみくじ（ライブ）" loading="lazy"></iframe></div>
+  </div>
+  <aside class="note">右側は実際のアプリをそのまま表示しています（ネット接続時）。スライド上で直接操作してデモできます。
+「診断してみたい方、QRからどうぞ」と声かけ。</aside>
+</section>
+
+<!-- 2 画面の流れ -->
+<section class="slide">
+  <div class="eyebrow">SCREENS</div>
+  <h2>6つの画面で、一本と石川を届ける</h2>
+  <div class="screens">
+    <div class="scr"><div class="n">1</div><div class="t">イントロ</div><div class="d">じざけまるがお出迎え。地酒マップ・オープンデータにも直接行ける</div></div>
+    <div class="scr"><div class="n">2</div><div class="t">10問＋おまけ</div><div class="d">1画面1問。最後に「どちらから？」（診断には影響しない）</div></div>
+    <div class="scr"><div class="n">3</div><div class="t">みくじ中</div><div class="d">じざけまるが跳ねる約1秒の「溜め」</div></div>
+    <div class="scr"><div class="n">4</div><div class="t">結果</div><div class="d">銘柄・味の3軸・蔵の物語・産地カード・あなたの数字</div></div>
+    <div class="scr"><div class="n">5</div><div class="t">地酒マップ</div><div class="d">県の地図に酒蔵をピン表示。今回の一本にバッジ</div></div>
+    <div class="scr od"><div class="n">6</div><div class="t">オープンデータで見る石川</div><div class="d">観光データのグラフ4種と出典・カタログへのリンク</div></div>
+  </div>
+</section>
+
+<!-- 3 診断ロジック -->
+<section class="slide">
+  <div class="eyebrow">HOW IT WORKS</div>
+  <h2>診断のしくみ</h2>
+  <div class="two">
+    <div class="feature" style="--c:var(--accent)">
+      <div class="badge">質問</div>
+      <div class="t">必須6問 ＋ ランダム4問</div>
+      <div class="d">必須：予算・甘辛・定番か挑戦か・温度・度数・有名か通好みか<br>ランダム：口当たり・香り・酸味・キレ／余韻・純米／吟醸・生酒／火入れ など10問から4問<br><span class="muted">→ 何度やっても質問が変わり、自分の好みが言葉になっていく</span></div>
+    </div>
+    <div class="feature" style="--c:var(--accent)">
+      <div class="badge">判定</div>
+      <div class="t">いちばん一致した銘柄を「みくじ」に</div>
+      <div class="d">各銘柄に16の属性を持たせ、回答との一致率で順位づけ。<br>同点が複数あればランダムに1本。<br><span class="muted">→ 知らなかった銘柄との「偶然の出会い」を演出</span></div>
+    </div>
+  </div>
+  <aside class="note">質問されたら：銘柄データは8銘柄（車多酒造・東酒造）。属性はすべて2〜3択の値で持っていて、単純な一致数で判定しています。</aside>
+</section>
+
+<!-- 4 オープンデータの使い方 -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--od)">OPEN DATA</div>
+  <h2>あなたのアプリにも、県のオープンデータを</h2>
+  <div class="two">
+    <div class="feature" style="--c:var(--od)">
+      <div class="badge">使うまでの3ステップ</div>
+      <div class="d"><b>① カタログで探してCSVをダウンロード</b><br>今回は「発地別観光入り込み客数」「国籍別外国人宿泊客数」<br><b>② 必要な行だけ抜き出してJSONに</b><br>アプリのコードに直接書けば、サーバーもDBも不要<br><b>③ 出典を表示する</b><br>アプリ内に出典名とカタログへのリンクを載せる</div>
+    </div>
+    <div class="feature" style="--c:var(--od)">
+      <div class="badge">「読みもの」を「自分ごと」に</div>
+      <div class="t">ユーザーの回答と、データを結びつける</div>
+      <div class="d">「首都圏から」と答えると<br><b class="od-num">293.4万人</b><br>＝令和4年に首都圏から石川を訪れた人。<br>統計表のままでは読まれない数字も、「あなた」に向けると届く。</div>
+    </div>
+  </div>
+  <aside class="note">データの取り込みは、CSVから必要な値を手で転記しただけ。数値が年1回更新される程度なら、APIがなくても十分使える。</aside>
+</section>
+
+<!-- 5 データ分析のTIPS -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--od)">DATA TIPS</div>
+  <h2>これから使う人へ：CSVのクセと対処法</h2>
+  <div class="cards c4">
+    <div class="card"><div class="num">01</div><div class="t">見出しが<br>複数行</div><div class="d">人が見る表の形のまま。1行目がタイトル、年は3行目…と読み飛ばしが必要。</div></div>
+    <div class="card"><div class="num">02</div><div class="t">構成比と実数が<br>交互の行</div><div class="d">同じ項目で<span class="nw">「%」の行</span>と「人数」の行が上下に並ぶ。</div></div>
+    <div class="card"><div class="num">03</div><div class="t">単位が<br>データごとに違う</div><div class="d">観光入込は「千人」、外国人宿泊は「人」。そのまま足すと桁がずれる。</div></div>
+    <div class="card"><div class="num">04</div><div class="t">項目の<br>開始年が違う</div><div class="d">欧州・豪州はH19〜、長野・東北はH26〜。それ以前は「その他」に含まれる。</div></div>
+  </div>
+  <div class="lead" style="font-size:28px">→ 注記まで読むと、グラフの「段差」の理由が分かる。年は和暦表記なので、比較するときは西暦に直すと扱いやすい。</div>
+</section>
+
+<!-- 6 データから見えた発見 -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--od)">FINDINGS</div>
+  <h2>データから見えた、あなたのアプリのヒント</h2>
+  <div class="cards c4 facts">
+    <div class="card"><div class="big">約4<small>倍</small></div><div class="d">外国人宿泊客に占める<b>欧州</b>の割合。<span class="nw">石川26.9%</span>／<span class="nw">全国6.5%</span>（令和6年）<br><span class="hint"><span class="nw">→ 欧州向け・多言語対応</span>のサービスに</span></div></div>
+    <div class="card"><div class="big">110.6<small>万人</small></div><div class="d">令和6年の外国人宿泊者数。統計のあるH17以降で<b>過去最高</b><br><span class="hint">→ インバウンド需要は伸びている</span></div></div>
+    <div class="card"><div class="big">2,502<small>万人</small></div><div class="d">北陸新幹線 金沢開業の平成27年に観光入込が<b>2,500万人突破</b><br><span class="hint">→ 交通の変化が人の流れを変える</span></div></div>
+    <div class="card"><div class="big">46.9<small>%</small></div><div class="d">令和4年の観光入込のうち<b>県内から</b>の割合<br><span class="hint">→ 県民向けのサービスにも市場がある</span></div></div>
+  </div>
+  <aside class="note">会場に問いかける：「このデータ、皆さんのプロダクトならどう使いますか？」</aside>
+</section>
+
+<!-- 7 LINE導線の工夫 -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--line)">LINE</div>
+  <h2>LINE連携は、URL 2つで作れる</h2>
+  <div class="two">
+    <div class="feature" style="--c:var(--line)">
+      <div class="badge">そのまま使えるコード</div>
+      <pre class="code"><span class="c">// ① 結果をLINEで送る（シェア）</span>
+https://social-plugins.line.me/lineit/share
+  ?url=アプリのURL&amp;text=送る文章
+
+<span class="c">// ② 公式アカウントを案内（友だち追加）</span>
+https://lin.ee/xxxxxxx</pre>
+      <div class="d"><b>API登録・審査・サーバー不要、0円。</b>自分のアプリの拡散にも、行政や企業の公式アカウントとの連携にも使える。</div>
+    </div>
+    <div class="feature" style="--c:var(--line)">
+      <div class="badge">使ってもらうための工夫</div>
+      <div class="d"><b>LINEを開く理由をつくる</b><br>「Keepメモに残せば酒屋さんで見せられる」「友だちに勧める」<br><b>本体の体験を邪魔しない</b><br>案内は保存・シェアのあとに1回だけ<br><b>PCとスマホで出し分け</b><br>スマホは友だち追加、PCはQRコード表示</div>
+    </div>
+  </div>
+  <aside class="note">実際の案内文：「このアプリは、石川県の日本酒ハッカソンから生まれました／ハッカソンの詳細は、石川県公式LINEで紹介中です！」
+行政の公式アカウントと組むと、アプリに信頼感が生まれ、官民協働の入口にもなる。</aside>
+</section>
+
+<!-- 8 UI/UXの工夫と弱点 -->
+<section class="slide">
+  <div class="eyebrow">UI / UX</div>
+  <h2>触って気づく、工夫と弱点</h2>
+  <div class="two">
+    <div class="feature" style="--c:var(--accent)">
+      <div class="badge">工夫</div>
+      <div class="d">・白×金×黒、明朝体で「地酒の品格」を表現<br>・1画面1問、選ぶだけ。文字入力なし<br>・マスコット「じざけまる」で親しみやすく<br>・結果は「マッチ度100%」と言い切る＝みくじの演出<br>・インストール不要、URLだけで動く</div>
+    </div>
+    <div class="feature" style="--c:#8f8577">
+      <div class="badge">弱点・これから</div>
+      <div class="d">・銘柄は2蔵・8本のみ（地図の3蔵は「近日追加」）<br>・味の3軸は2段階で、細かな違いは出ない<br>・瓶・蔵の写真はまだ仮置き<br>・日本語のみ（欧州客の多さを考えると多言語化したい）<br>・観光データは県単位で、市町ごとの数字ではない</div>
+    </div>
+  </div>
+  <aside class="note">弱点は会場からのアイデアを募るきっかけに。「どのデータがあれば市町別にできる？」など。</aside>
+</section>
+
+<!-- 9 つくり方とコスト -->
+<section class="slide">
+  <div class="eyebrow">BUILD</div>
+  <h2>つくり方とコスト</h2>
+  <div class="cards c4">
+    <div class="card"><div class="num">DESIGN</div><div class="t">AIでデザイン</div><div class="d">Claude Designで画面を試作。マインドマップで構想を整理。</div></div>
+    <div class="card"><div class="num">CODE</div><div class="t nw">HTML 1ファイル</div><div class="d">Claude Codeで実装。サーバー・データベースなし。</div></div>
+    <div class="card"><div class="num">HOSTING</div><div class="t">GitHub Pages</div><div class="d">公開は無料。更新はファイルを上げ直すだけ。</div></div>
+    <div class="card"><div class="num">COST</div><div class="t">0円</div><div class="d">LINEも標準のシェア機能と<span class="nw">友だち追加URL</span>のみで連携。</div></div>
+  </div>
+</section>
+
+<!-- 10 これから -->
+<section class="slide">
+  <div class="eyebrow">NEXT</div>
+  <h2>これから広げたいこと</h2>
+  <div class="cards c3">
+    <div class="card"><div class="num">01</div><div class="t">酒蔵が自分で<br>銘柄を登録</div><div class="d">LINEのアンケート機能などで、蔵元が新銘柄を直接登録できる仕組みに。</div></div>
+    <div class="card"><div class="num">02</div><div class="t">データを<br>もっと重ねる</div><div class="d">市町別人口、米の生産量、<span class="nw">河川・水源</span>など、カタログの他のデータを産地の物語に。</div></div>
+    <div class="card"><div class="num">03</div><div class="t">能登の蔵、<br>そして世界へ</div><div class="d">能登の酒蔵を順次掲載。欧州客の多さを活かして多言語化も。</div></div>
+  </div>
+  <div class="lead" style="font-size:30px;margin-top:auto">オープンデータもLINE連携も、皆さんのプロダクトでそのまま使えます。アイデア・ご意見、ぜひ聞かせてください。</div>
+</section>
+
+</div>
+<div id="notes"></div>
+<div id="help">← → 移動 ／ N 原稿 ／ F 全画面</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ===== 共通スライドエンジン =====
+if (new URLSearchParams(location.search).has('static')) document.body.classList.add('static');
+const APP_URL = 'https://govcaretechnologies-corder.github.io/nihonsyu-hackathon/';
+const deck = document.getElementById('deck');
+const slides = [...deck.querySelectorAll('.slide')];
+const notes = document.getElementById('notes');
+let cur = Math.min(Math.max(parseInt(location.hash.slice(1)) || 1, 1), slides.length) - 1;
+
+slides.forEach((s, i) => {
+  s.insertAdjacentHTML('beforeend', `<div class="brandmark">百万石のみくじ</div><div class="pageno">${i + 1} / ${slides.length}</div>`);
+});
+function fit() { const k = Math.min(innerWidth / 1920, innerHeight / 1080); deck.style.transform = `translate(-50%,-50%) scale(${k})`; }
+const SEQ = '.card,.step,.arrow,.user,.feature,.scr,.try,.quote-box,.phone-live';
+slides.forEach(s => s.querySelectorAll(SEQ).forEach((el, n) => { el.dataset.seq = ''; el.style.setProperty('--i', n); }));
+function show(i) {
+  if (!t0 && i !== cur) { t0 = Date.now(); document.body.classList.add('started'); }
+  cur = Math.min(Math.max(i, 0), slides.length - 1);
+  slides.forEach((s, j) => s.classList.toggle('active', j === cur));
+  const n = slides[cur].querySelector('.note');
+  notes.textContent = n ? n.textContent.trim() : '';
+  history.replaceState(null, '', '#' + (cur + 1));
+}
+// 経過時間（最初にスライドを進めた時点から計測。原稿パネルの右上に表示）
+let t0 = 0;
+const timer = document.createElement('div');
+timer.id = 'timer';
+document.body.appendChild(timer);
+setInterval(() => {
+  if (!t0) return;
+  const sec = Math.floor((Date.now() - t0) / 1000);
+  timer.textContent = `経過 ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+}, 250);
+addEventListener('resize', fit);
+addEventListener('keydown', e => {
+  if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  else if (e.key === 'Home') show(0);
+  else if (e.key === 'End') show(slides.length - 1);
+  else if (e.key === 'n' || e.key === 'N') { notes.classList.toggle('show'); document.body.classList.toggle('notes-on', notes.classList.contains('show')); }
+  else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+});
+deck.addEventListener('click', e => { if (e.target.closest('a,iframe')) return; show(e.clientX > innerWidth / 2 ? cur + 1 : cur - 1); });
+// QRコード（オフライン時はURLの文字だけ表示）
+if (window.QRCode) document.querySelectorAll('[data-qr]').forEach(el => new QRCode(el, { text: APP_URL, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.M }));
+else document.querySelectorAll('[data-qr]').forEach(el => el.style.display = 'none');
+fit(); show(cur);
+</script>
+</body>
+</html>
