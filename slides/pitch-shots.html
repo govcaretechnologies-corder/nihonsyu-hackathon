@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pitch（アプリ画面つき）｜百万石のみくじ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Noto+Serif+JP:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== スライド共通 ===== */
+:root{--bg:#ffffff;--fg:#181512;--sub:#8f8577;--accent:#1B335A;--gold2:#2f5a94;--bd:rgba(27,51,90,.30);--od:#1B335A;--line:#06c755;
+  --serif:'Noto Serif JP','Yu Mincho','YuMincho','Hiragino Mincho ProN',serif;--sans:'Noto Sans JP','Yu Gothic','YuGothic','Hiragino Sans','Meiryo',sans-serif}
+html,body{margin:0;height:100%;background:#1c1916;overflow:hidden}
+.deck{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center}
+.slide{position:absolute;inset:0;background:var(--bg);color:var(--fg);font-family:var(--sans);box-sizing:border-box;padding:110px 140px;display:none;flex-direction:column;justify-content:center}
+.slide.active{display:flex}
+.slide::before{content:'';position:absolute;inset:36px;border:2px solid var(--bd);pointer-events:none}
+.pageno{position:absolute;right:70px;bottom:56px;font:700 22px var(--sans);color:var(--sub);letter-spacing:.1em}
+.brandmark{position:absolute;left:70px;bottom:56px;font:700 20px var(--sans);color:var(--accent);letter-spacing:.2em}
+.note{display:none}
+#notes{position:fixed;left:0;right:0;bottom:0;max-height:40vh;overflow:auto;background:rgba(24,21,18,.94);color:#fdfcf9;font:16px/1.8 var(--sans);padding:14px 22px;display:none;z-index:10;white-space:pre-line}
+#notes.show{display:block}
+#timer{position:fixed;left:12px;top:10px;color:#8f8577;font:700 14px var(--sans);z-index:11;display:none}
+body.notes-on #timer{display:block}
+body.started #help{display:none}
+#help{position:fixed;right:12px;top:10px;color:#8f8577;font:12px var(--sans);z-index:10}
+.eyebrow{font:800 26px var(--sans);letter-spacing:.2em;color:var(--accent)}
+h1,h2{font-family:var(--serif);margin:0}
+h2{font-size:72px;font-weight:800;line-height:1.35;margin-top:18px}
+.lead{font-size:34px;line-height:1.7;color:var(--sub);margin-top:24px}
+/* じざけまる */
+.mascot{width:78px;display:inline-block}
+.m-slip{width:62px;height:94px;margin:0 auto;box-sizing:border-box;background:linear-gradient(#fff,#fffdf7);border:2px solid #b8862f;border-radius:5px;position:relative;display:flex;flex-direction:column;align-items:center;padding-top:7px;box-shadow:0 2px 0 rgba(184,134,47,.18)}
+.m-slip::before{content:'';position:absolute;left:10px;right:10px;top:31px;border-top:1px dashed rgba(184,134,47,.45)}
+.m-kanji{font:700 20px/1 'Noto Serif JP','Yu Mincho',serif;color:#b8862f}
+.m-face{position:relative;width:100%;flex:1}
+.m-eye{position:absolute;width:5px;height:7px;border-radius:50%;background:#181512;top:22px}
+.m-eye.l{left:16px}.m-eye.r{right:16px}
+.m-cheek{position:absolute;width:8px;height:5px;border-radius:50%;background:rgba(184,134,47,.38);top:31px}
+.m-cheek.l{left:9px}.m-cheek.r{right:9px}
+.m-mouth{position:absolute;left:50%;top:31px;width:10px;height:5px;border-bottom:2px solid #181512;border-radius:0 0 10px 10px;transform:translateX(-50%)}
+.qr{background:#fff;padding:14px;border:2px solid var(--accent);display:inline-block;line-height:0}
+.qr img,.qr canvas{width:100%;height:auto}
+.url{font:700 22px var(--sans);color:var(--sub);margin-top:10px;word-break:break-all}
+/* 言葉の途中で改行しない（文節単位で折り返す：Chrome/Edge 119+） */
+.slide{word-break:auto-phrase;line-break:strict}
+h1,h2,.t,.who,.msg,.team{text-wrap:balance}
+.d,.scene,.cap,.lead{text-wrap:pretty}
+.nw{white-space:nowrap}
+/* アニメーション */
+@keyframes rise{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:scale(0) rotate(-14deg)}65%{opacity:1;transform:scale(3.6) rotate(4deg)}100%{transform:scale(3.2)}}
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.slide.active .eyebrow,.slide.active h1,.slide.active h2,.slide.active .team,.slide.active .sub,.slide.active .lead{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+.slide.active h1,.slide.active h2{animation-delay:.1s}
+.slide.active .sub,.slide.active .lead{animation-delay:.2s}
+.slide.active [data-seq]{animation:rise .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.3s + var(--i) * .14s)}
+.slide.active .eyebrow::after{content:'';display:block;width:64px;height:3px;background:var(--accent);margin-top:14px;transform-origin:left;animation:grow .6s .2s ease both}
+.cover .eyebrow::after{display:none}
+.slide.active.cover .mascot{animation:pop .9s cubic-bezier(.3,1.4,.5,1) both,floaty 3s 1s ease-in-out infinite}
+.slide.active .feature .d b{background:linear-gradient(transparent 62%,rgba(6,199,85,.28) 62%) no-repeat;background-size:0 100%;animation:mark .8s 1.4s ease forwards}
+@keyframes mark{to{background-size:100% 100%}}
+/* 印刷（PDF出力）・静止表示（?static）用：アニメーションを止め、全スライドを1ページずつ */
+body.static .slide *,body.static .slide *::after{animation:none!important}
+body.static .feature .d b{background-size:100% 100%!important}
+body.static #help,body.static #timer,body.static #notes{display:none!important}
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{height:auto;overflow:visible;background:#fff}
+  .deck{position:static;transform:none!important}
+  .slide{display:flex!important;position:relative;width:1920px;height:1080px;break-after:page}
+  .deck{width:1920px;height:auto}
+  .slide *,.slide *::after{animation:none!important}
+  .feature .d b{background-size:100% 100%!important}
+  #notes,#help,#timer{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){.slide.active *,.slide.active *::after{animation:none!important;background-size:100% 100%!important}}
+
+/* ===== Pitch ===== */
+.cover{align-items:center;justify-content:center;text-align:center;gap:26px}
+.cover .mascot{transform:scale(3.2);margin:90px 0 110px}
+.team{font:800 40px var(--sans);letter-spacing:.14em;color:var(--accent)}
+.cover h1{font-size:112px;font-weight:800;letter-spacing:.06em}
+.cover .sub{font-size:34px;color:var(--sub)}
+.cards{display:grid;gap:34px;margin-top:60px}
+.cards.c3{grid-template-columns:repeat(3,1fr)}
+.cards.c4{grid-template-columns:repeat(4,1fr)}
+.card{border:2px solid var(--accent);background:#fff;padding:42px 38px;display:flex;flex-direction:column;gap:18px}
+.card .num{font:800 26px var(--sans);color:var(--accent);letter-spacing:.1em}
+.card .t{font:800 40px/1.45 var(--serif)}
+.card .d{font-size:26px;line-height:1.7;color:var(--sub)}
+.flow{display:flex;align-items:stretch;gap:24px;margin-top:56px}
+.step{flex:1;border:2px solid var(--accent);background:#fff;padding:34px 30px;display:flex;flex-direction:column;gap:14px}
+.step .k{font:800 24px var(--sans);color:var(--accent);letter-spacing:.12em}
+.step .t{font:800 38px/1.4 var(--serif)}
+.step .d{font-size:25px;line-height:1.7;color:var(--sub)}
+.arrow{align-self:center;font-size:48px;color:var(--accent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:50px;flex:1}
+.feature{border:2px solid var(--c);padding:44px;display:flex;flex-direction:column;gap:20px;background:#fff}
+.badge{align-self:flex-start;font:800 22px var(--sans);letter-spacing:.14em;color:#fff;background:var(--c);padding:6px 16px}
+.feature .t{font:800 44px/1.45 var(--serif)}
+.feature .d{font-size:27px;line-height:1.75;color:var(--fg)}
+.feature .big{font:800 88px/1 var(--serif);color:var(--c)}
+.feature .big small{font-size:34px;margin-left:8px}
+.feature .cap{font-size:22px;color:var(--sub)}
+.src{margin-top:auto;border-top:1px dashed var(--bd);padding-top:18px;font:800 24px/1.6 var(--sans);color:var(--od)}
+.src a{font:700 22px var(--sans);color:var(--od);word-break:break-all}
+.users{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:50px}
+.user{border:2px solid var(--accent);background:#fff;padding:36px;display:flex;flex-direction:column;gap:14px}
+.user .who{font:800 38px/1.4 var(--serif)}
+.user .scene{font-size:25px;line-height:1.7;color:var(--sub)}
+.user .scene b{color:var(--fg)}
+.try{display:flex;align-items:center;gap:40px;margin-top:auto}
+.try .qr{width:200px}
+.try .msg{font:800 40px/1.5 var(--serif)}
+
+/* ===== アプリ画面つきバージョン ===== */
+.row2{display:flex;gap:56px;align-items:center;margin-top:44px;flex:1}
+.row2 > .cards,.row2 > .flow,.row2 > .users{flex:1;margin-top:0}
+.row2 .card,.row2 .step,.row2 .user{padding:32px 28px}
+.row2 .card .t,.row2 .step .t,.row2 .user .who{font-size:34px}
+.row2 .card .d,.row2 .step .d,.row2 .user .scene{font-size:22px}
+.row2 .flow{gap:16px}
+.shot{width:252px;flex-shrink:0;margin:0}
+.shot img{width:100%;display:block}
+.shot figcaption{margin-top:14px;text-align:center;font:700 20px var(--sans);color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 チーム名・ロゴ -->
+<section class="slide cover">
+  <div class="team">TEAM GCT</div>
+  <div class="mascot"><div class="m-slip"><div class="m-kanji">酒</div><div class="m-face"><span class="m-eye l"></span><span class="m-eye r"></span><div class="m-cheek l"></div><div class="m-cheek r"></div><div class="m-mouth"></div></div></div></div>
+  <h1>百万石のみくじ</h1>
+  <div class="sub">石川の地酒から、今日の一本を占う</div>
+  <aside class="note">（0:00〜0:08／約8秒）
+チームGCTです。石川の地酒を「みくじ」で届けるアプリ、「百万石のみくじ」を紹介します。</aside>
+</section>
+
+<!-- 2 解決したい課題 -->
+<section class="slide">
+  <div class="eyebrow">PROBLEM</div>
+  <h2>地酒の魅力が、選ぶ人にうまく届いていない</h2>
+  <div class="row2"><div class="cards c3">
+    <div class="card"><div class="num">01</div><div class="t">「辛口・甘口」だけでは<br>味が伝わらない</div><div class="d">ラベルの言葉は抽象的で、自分の好みと結びつかない。</div></div>
+    <div class="card"><div class="num">02</div><div class="t">店頭で説明できる<br>人手が足りない</div><div class="d">酒販店・飲食店で、一人ひとりに合う一本を案内しきれない。</div></div>
+    <div class="card"><div class="num">03</div><div class="t">県民が地酒を<br>紹介する手段がない</div><div class="d">友人やお土産に勧めたくても、銘柄の背景や県内での立ち位置まで伝えにくい。</div></div>
+  </div><figure class="shot"><img src="shots/quiz.png" alt="診断画面（全10問）"><figcaption>診断画面（全10問）</figcaption></figure></div>
+  <aside class="note">（0:08〜0:25／約17秒）
+日本酒を選ぶとき、「辛口」「甘口」と書かれていても、実際の味は想像しにくいですよね。
+お店には、一人ひとりに説明できる人手が足りません。
+そして県民も、友人やお土産に地酒を勧めたいのに、その手段がありません。</aside>
+</section>
+
+<!-- 3 アプリ名と概要 (1) -->
+<section class="slide">
+  <div class="eyebrow">APP — 百万石のみくじ</div>
+  <h2>10の質問に答えるだけで、<br>石川の地酒から「今日の一本」を引き当てる</h2>
+  <div class="row2"><div class="flow">
+    <div class="step"><div class="k">STEP 1</div><div class="t">10問に答える</div><div class="d">予算・甘辛・温度など必須6問＋好みを深掘りする4問。毎回ちがう質問が出る。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="k">STEP 2</div><div class="t">一本を引き当てる</div><div class="d">回答にいちばん合う銘柄を「みくじ」として提示。味のバランスも図で見える。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="k">STEP 3</div><div class="t">蔵と土地の物語へ</div><div class="d">酒蔵の想い、<span class="nw">水源・米・工芸</span>、地酒マップでの立ち位置まで届ける。</div></div>
+  </div><figure class="shot"><img src="shots/result.png" alt="結果画面"><figcaption>結果画面</figcaption></figure></div>
+  <aside class="note">（0:25〜0:45／約20秒）
+そこで作ったのが「百万石のみくじ」です。
+予算や甘口・辛口、飲む温度など、10の質問に答えると、石川の地酒から今日の一本を引き当てます。
+結果では銘柄だけでなく、酒蔵の想い、水や米といった土地の物語、地図での位置まで伝えます。</aside>
+</section>
+
+<!-- 4 想定利用ユーザー -->
+<section class="slide">
+  <div class="eyebrow">USERS</div>
+  <h2>想定利用ユーザー</h2>
+  <div class="row2"><div class="users">
+    <div class="user"><div class="who">石川を訪れる観光客</div><div class="scene">旅先の酒屋や宿で<b class="nw">「どれを選べばいい？」</b>と迷ったときに。結果はLINEに保存して、そのまま店頭で見せられる。</div></div>
+    <div class="user"><div class="who">地酒を勧めたい県民</div><div class="scene">県外の友人やお土産選びに。<b class="nw">「友だちに勧める」</b>で結果をLINEで送って、石川の魅力ごと紹介できる。</div></div>
+    <div class="user"><div class="who">酒販店・飲食店</div><div class="scene">説明の人手が足りないときの<b>接客の補助</b>に。お客さまと一緒に診断して、会話のきっかけにできる。</div></div>
+  </div><figure class="shot"><img src="shots/map.png" alt="石川の地酒マップ"><figcaption>石川の地酒マップ</figcaption></figure></div>
+  <aside class="note">（0:45〜1:00／約15秒）
+使ってほしいのは、旅先で一本を選びたい観光客、地酒を勧めたい県民、そして説明の人手が足りない酒販店や飲食店です。</aside>
+</section>
+
+<!-- 5 アプリの概要 (2) -->
+<section class="slide">
+  <div class="eyebrow">FEATURES</div>
+  <h2>２つの仕掛け</h2>
+  <div class="two">
+    <div class="feature" style="--c:var(--od)">
+      <div class="badge">OPEN DATA</div>
+      <div class="t">石川県のオープンデータで、<br>アプリに<span class="nw">「根拠」や「発見」</span>を。</div>
+      <div class="d">石川県オープンデータカタログの公開データを活用し、レコメンド結果に客観的な裏付けを付与。<br>感覚や印象だけでなく、公開データに基づく判断材料を提供することで、体験価値と納得感を高めています。</div>
+      <div class="src">いしかわオープンデータカタログ<br><a href="https://front.opendata.pref.ishikawa.lg.jp/" target="_blank" rel="noopener">https://front.opendata.pref.ishikawa.lg.jp/</a></div>
+    </div>
+    <div class="feature" style="--c:var(--line)">
+      <div class="badge">LINE</div>
+      <div class="t">いつものLINEで、<br>石川県とつながる。</div>
+      <div class="d">おすすめ結果はLINEで手軽にシェア可能。<br>石川県公式LINEへの導線を設けることで、<b>フェーズフリーな仕組み</b>として、観光やイベント・防災情報など行政サービスとの接点づくりにもつなげます。</div>
+    </div>
+  </div>
+  <aside class="note">（1:00〜2:15／約75秒）
+ここからは、石川県の取り組みと組み合わせた、2つの仕掛けです。
+
+1つ目は、いしかわオープンデータカタログ。
+今回は観光データを取り込み、「どちらから来たか」に合わせて、自分に関係する数字を見せています。
+カタログには県のさまざまなデータが公開されていて、誰でも無料で使えます。データから地域の課題を発見したり、根拠のある数字で新しいサービスやビジネスを生み出したり。皆さんのアイデアを形にする材料になります。
+
+2つ目は、石川県公式LINE。
+結果の保存や友だちへのおすすめの流れで、県の公式LINEを案内します。
+普段は地酒を楽しむためのつながりですが、災害などいざという時には、行政からの支援情報のプッシュ配信や、アンケートによる被災状況の調査にも使えます。平時のつながりが、有事の備えになる。フェーズフリーな仕掛けです。
+
+このあとのTouchセッションで、ぜひ触ってみてください。</aside>
+</section>
+
+</div>
+<div id="notes"></div>
+<div id="help">← → 移動 ／ N 原稿 ／ F 全画面</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ===== 共通スライドエンジン =====
+if (new URLSearchParams(location.search).has('static')) document.body.classList.add('static');
+const APP_URL = 'https://govcaretechnologies-corder.github.io/nihonsyu-hackathon/';
+const deck = document.getElementById('deck');
+const slides = [...deck.querySelectorAll('.slide')];
+const notes = document.getElementById('notes');
+let cur = Math.min(Math.max(parseInt(location.hash.slice(1)) || 1, 1), slides.length) - 1;
+
+slides.forEach((s, i) => {
+  s.insertAdjacentHTML('beforeend', `<div class="brandmark">百万石のみくじ</div><div class="pageno">${i + 1} / ${slides.length}</div>`);
+});
+function fit() { const k = Math.min(innerWidth / 1920, innerHeight / 1080); deck.style.transform = `translate(-50%,-50%) scale(${k})`; }
+const SEQ = '.card,.step,.arrow,.user,.feature,.scr,.try,.quote-box,.phone-live';
+slides.forEach(s => s.querySelectorAll(SEQ).forEach((el, n) => { el.dataset.seq = ''; el.style.setProperty('--i', n); }));
+function show(i) {
+  if (!t0 && i !== cur) { t0 = Date.now(); document.body.classList.add('started'); }
+  cur = Math.min(Math.max(i, 0), slides.length - 1);
+  slides.forEach((s, j) => s.classList.toggle('active', j === cur));
+  const n = slides[cur].querySelector('.note');
+  notes.textContent = n ? n.textContent.trim() : '';
+  history.replaceState(null, '', '#' + (cur + 1));
+}
+// 経過時間（最初にスライドを進めた時点から計測。原稿パネルの右上に表示）
+let t0 = 0;
+const timer = document.createElement('div');
+timer.id = 'timer';
+document.body.appendChild(timer);
+setInterval(() => {
+  if (!t0) return;
+  const sec = Math.floor((Date.now() - t0) / 1000);
+  timer.textContent = `経過 ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+}, 250);
+addEventListener('resize', fit);
+addEventListener('keydown', e => {
+  if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  else if (e.key === 'Home') show(0);
+  else if (e.key === 'End') show(slides.length - 1);
+  else if (e.key === 'n' || e.key === 'N') { notes.classList.toggle('show'); document.body.classList.toggle('notes-on', notes.classList.contains('show')); }
+  else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+});
+deck.addEventListener('click', e => { if (e.target.closest('a,iframe')) return; show(e.clientX > innerWidth / 2 ? cur + 1 : cur - 1); });
+// QRコード（オフライン時はURLの文字だけ表示）
+if (window.QRCode) document.querySelectorAll('[data-qr]').forEach(el => new QRCode(el, { text: APP_URL, width: 512, height: 512, correctLevel: QRCode.CorrectLevel.M }));
+else document.querySelectorAll('[data-qr]').forEach(el => el.style.display = 'none');
+fit(); show(cur);
+</script>
+</body>
+</html>
