@@ -95,15 +95,15 @@ a{color:#a8783a}a:hover{color:#8a6329}
 .region-value{color:var(--fg);font-weight:600;text-align:right}
 .region-source{font-size:9px;color:var(--sub);font-family:'Noto Sans JP',sans-serif;padding-top:4px;border-top:1px dashed var(--cardbd);line-height:1.6}
 .mascot{width:78px;margin:0 auto}
-.m-head{width:44px;height:44px;border-radius:50%;background:#fff;border:2px solid var(--accent);margin:0 auto;position:relative;z-index:2}
-.m-eye{position:absolute;width:4px;height:6px;border-radius:50%;background:#181512;top:18px}
-.m-eye.l{left:13px}.m-eye.r{right:13px}
-.m-cheek{position:absolute;width:7px;height:4px;border-radius:50%;background:rgba(184,134,47,.35);top:24px}
-.m-cheek.l{left:7px}.m-cheek.r{right:7px}
-.m-mouth{position:absolute;left:50%;top:25px;width:9px;height:4px;border-bottom:2px solid #181512;border-radius:0 0 9px 9px;transform:translateX(-50%)}
-.m-body{width:78px;height:66px;margin-top:-10px;border-radius:50%;background:radial-gradient(circle at 45% 35%,#f6e8c8,#d9b878 78%);border:2px solid var(--accent);position:relative;z-index:1;overflow:hidden;box-sizing:border-box}
-.m-rope{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(122,84,32,.4) 6px 8px),repeating-linear-gradient(-45deg,transparent 0 6px,rgba(122,84,32,.4) 6px 8px)}
-.m-label{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:#fdfcf9;border:2px solid var(--fg);display:flex;align-items:center;justify-content:center;font:700 14px 'Noto Serif JP',serif;color:var(--fg);z-index:1;box-sizing:border-box}
+.m-slip{width:62px;height:94px;margin:0 auto;box-sizing:border-box;background:linear-gradient(#fff,#fffdf7);border:2px solid var(--accent);border-radius:5px;position:relative;display:flex;flex-direction:column;align-items:center;padding-top:7px;box-shadow:0 2px 0 rgba(184,134,47,.18)}
+.m-slip::before{content:'';position:absolute;left:10px;right:10px;top:31px;border-top:1px dashed rgba(184,134,47,.45)}
+.m-kanji{font:700 20px/1 'Noto Serif JP','Yu Mincho',serif;color:var(--accent)}
+.m-face{position:relative;width:100%;flex:1}
+.m-eye{position:absolute;width:5px;height:7px;border-radius:50%;background:#181512;top:22px}
+.m-eye.l{left:16px}.m-eye.r{right:16px}
+.m-cheek{position:absolute;width:8px;height:5px;border-radius:50%;background:rgba(184,134,47,.38);top:31px}
+.m-cheek.l{left:9px}.m-cheek.r{right:9px}
+.m-mouth{position:absolute;left:50%;top:31px;width:10px;height:5px;border-bottom:2px solid #181512;border-radius:0 0 10px 10px;transform:translateX(-50%)}
 .mascot-caption{font-size:9.5px;color:var(--sub);text-align:center;font-family:'Noto Sans JP',sans-serif;letter-spacing:.05em;margin-top:6px;white-space:nowrap}
 .mascot.bounce{animation:mbounce 1s ease-in-out infinite}
 @keyframes mbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -322,7 +322,7 @@ const man = n => toMan(n / 10000); // 人 → 万人
 const manK = n => toMan(n / 10);   // 千人 → 万人
 const nl2br = s => s.replace(/\n/g, '<br>');
 
-const mascot = (bounce) => `<div class="mascot${bounce ? ' bounce' : ''}"><div class="m-head"><span class="m-eye l"></span><span class="m-eye r"></span><div class="m-cheek l"></div><div class="m-cheek r"></div><div class="m-mouth"></div></div><div class="m-body"><div class="m-rope"></div><div class="m-label">酒</div></div></div>`;
+const mascot = (bounce) => `<div class="mascot${bounce ? ' bounce' : ''}"><div class="m-slip"><div class="m-kanji">酒</div><div class="m-face"><span class="m-eye l"></span><span class="m-eye r"></span><div class="m-cheek l"></div><div class="m-cheek r"></div><div class="m-mouth"></div></div></div></div>`;
 const brandline = (brand, right = '') => `<div class="brandline"><span class="brand">${brand}</span>${right}</div>`;
 
 function viewIntro() {
