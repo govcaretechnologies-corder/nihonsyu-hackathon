@@ -438,7 +438,6 @@ function viewResult() {
   return `<div class="r-eyebrow">百万石のみくじ結果</div>
   <div class="scroll-page">
     <div class="bottle-wrap"><div class="bottle-ph">${r.label1}<br>${r.label2}</div><div><div class="sake-name">${r.name}</div><div class="brewery">${r.brewery} · ${r.location}</div><div class="match">マッチ度 100%</div><div class="price">${r.priceDisplay}</div></div></div>
-    ${whyBlock(r)}
     <div class="spectrum">${spec.map(s => `<div><div class="spec-labels"><span>${s.left}</span><span>${s.right}</span></div><div class="spec-track"><div class="spec-dot" style="left:${s.pct}%"></div></div></div>`).join('')}</div>
     <div class="divider"></div>
     <div class="hero-ph">${b.heroLabel}</div>
@@ -458,6 +457,7 @@ function viewResult() {
       <div class="region-source">出典：石川県オープンデータカタログ「発地別観光入り込み客数（推計）」「国籍別外国人宿泊客数」</div>
     </div>
     ${youCard(state.answers.origin)}
+    ${whyBlock(r)}
     <div class="data-link" data-act="data">オープンデータで見る石川 →</div>
     <a class="yt-card" href="${videoUrl}" target="_blank" rel="noopener"><div class="yt-thumb"><div class="yt-play"></div><span class="yt-duration">3:24</span></div><div class="yt-caption">▶ ${b.name}の紹介動画をYouTubeで見る</div></a>
     <div class="map-link" data-act="map">地酒マップで立ち位置を見る</div>
