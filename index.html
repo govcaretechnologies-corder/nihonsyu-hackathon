@@ -183,6 +183,9 @@ a{color:#a8783a}a:hover{color:#8a6329}
 // CSV（project/uploads/）から転記
 // ============================================================
 // 石川県公式LINE 友だち追加URL（スマホ：友だち追加／PC：QRコード表示）
+// 結果画面の「このみくじの根拠」カードの表示（true に戻すと再表示）
+const SHOW_WHY = false;
+
 const LINE_ADD_URL = 'https://lin.ee/9lNoSAS';
 const LINE_QR_URL = 'https://page.line.me/791srqet?openQrModal=true';
 const IS_MOBILE = /iPhone|iPad|Android/i.test(navigator.userAgent) || matchMedia('(pointer:coarse)').matches;
@@ -521,10 +524,9 @@ function viewResult() {
       <div class="region-source">出典：石川県オープンデータカタログ「発地別観光入り込み客数（推計）」「国籍別外国人宿泊客数」</div>
     </div>
     ${youCard(state.answers.origin)}
-    ${whyBlock(r)}
+    ${SHOW_WHY ? whyBlock(r) : ''}
     <div class="data-link" data-act="data">オープンデータで見る石川 →</div>
     <a class="yt-card" href="${videoUrl}" target="_blank" rel="noopener"><div class="yt-thumb"><div class="yt-play"></div><span class="yt-duration">3:24</span></div><div class="yt-caption">▶ ${b.name}の紹介動画をYouTubeで見る</div></a>
-    <div class="map-link" data-act="map">地酒マップで立ち位置を見る</div>
     <div class="share-row"><div class="share-btn primary" data-act="line-recommend">友だちに勧める</div><div class="share-btn line" data-act="line-save">LINEで保存</div></div>
     <div class="share-note">「LINEで保存」でKeepメモに残せば、酒屋さんで見せられます</div>
     ${lineCard()}
