@@ -125,6 +125,11 @@ a{color:#a8783a}a:hover{color:#8a6329}
 .why-op{font-size:11px;font-weight:800;color:#2f6f8f;text-align:center;line-height:1}
 .why-src{display:flex;flex-direction:column;gap:3px;margin-top:1px}
 .why-src a{font-size:10.5px;line-height:1.6;color:#2f6f8f;font-weight:600}
+.why-row{display:flex;flex-direction:column;gap:2px;padding:7px 0;border-top:1px dashed rgba(47,111,143,.35)}
+.why-row:first-child{border-top:none;padding-top:2px}
+.why-how{font-size:10px;line-height:1.65;color:var(--sub)}
+.why-val{font-size:10.5px;line-height:1.6;color:var(--fg);font-weight:700}
+.why-note{font-size:9.5px;line-height:1.6;color:var(--sub);border-top:1px dashed rgba(47,111,143,.35);padding-top:6px}
 .data-link{text-align:center;padding:12px;border-radius:2px;font-size:11px;font-weight:700;font-family:'Noto Sans JP',sans-serif;color:#fff;background:#2f6f8f;cursor:pointer;flex-shrink:0}
 .data-intro{font-size:11.5px;line-height:1.8;color:var(--sub);font-family:'Noto Sans JP',sans-serif}
 .chart-card{border:1px solid var(--cardbd);border-radius:2px;padding:14px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;background:#fff}
@@ -187,8 +192,10 @@ const LINE_FRIEND_LABEL = IS_MOBILE ? '石川県公式LINEを見る' : 'QRコー
 const OPEN_DATA = {
   catalogUrl: 'https://front.opendata.pref.ishikawa.lg.jp/',
   datasets: [
-    { label: '発地別入り込み客数', url: 'https://ckan.opendata.pref.ishikawa.lg.jp/dataset/170003_kankou_irikomi_domestic', use: 'あなたの出発地に関する数字' },
-    { label: '国籍別外国人宿泊者数', url: 'https://ckan.opendata.pref.ishikawa.lg.jp/dataset/170003_kankou_syukuhakukyaku_foreigner', use: '産地カードの訪日客の内訳' },
+    { key: 'domestic', label: '発地別入り込み客数（石川県・令和4年）', url: 'https://ckan.opendata.pref.ishikawa.lg.jp/dataset/170003_kankou_irikomi_domestic',
+      how: '最後の質問「どちらからお越しですか？」の回答と突き合わせ、あなたの地域から石川を訪れた人数と割合を出しています。' },
+    { key: 'foreign', label: '国籍別外国人宿泊者数（石川県・令和6年）', url: 'https://ckan.opendata.pref.ishikawa.lg.jp/dataset/170003_kankou_syukuhakukyaku_foreigner',
+      how: '石川に泊まった外国人の内訳から上位3つを取り出し、産地カードの「外国人宿泊客の主な地域」に使っています。' },
   ],
   visitorsTrend: { // 観光入り込み客数 合計（千人）
     years: ['H17','H18','H19','H20','H21','H22','H23','H24','H25','H26','H27','H28','H29','H30','R1','R2','R3','R4'],
@@ -415,13 +422,38 @@ function whyBlock(r) {
   const shown = picked.slice(0, 3).join('・');
   const rest = picked.length > 3 ? ` ほか${picked.length - 3}問` : '';
   const originOpt = ORIGIN_Q.options.find(o => o.value === state.answers.origin);
+
+  // 各データの「今回の値」
+  const d = OPEN_DATA.domesticOrigin, rows = Object.fromEntries(d.rows.map(x => [x.key, x]));
+  const o = state.answers.origin;
+  let domesticVal;
+  if (o === 'overseas') {
+    domesticVal = `海外からのため対象外（かわりに外国人宿泊者数 ${man(OPEN_DATA.foreignTrend.values.at(-1))}人を表示）`;
+  } else if (o === 'neighbor') {
+    const v = rows.toyama.value + rows.fukui.value;
+    domesticVal = `富山・福井から ${manK(v)}人（${(rows.toyama.pct + rows.fukui.pct).toFixed(1)}%）`;
+  } else {
+    const x = rows[o] || rows.other;
+    domesticVal = `${x.label}から ${manK(x.value)}人（${x.pct}%）`;
+  }
+  const fs = OPEN_DATA.foreignShare;
+  const foreignVal = fs.rows.slice(0, 3).map(x => `${x.label} ${x.ishikawa}%`).join('／');
+  const vals = { domestic: domesticVal, foreign: foreignVal };
+
   return `<div class="why">
     <div class="why-head"><span class="od-badge">OPEN DATA</span> このみくじの根拠</div>
     <div class="why-step"><span class="why-k">あなたの回答</span><span class="why-v">${shown}${rest}${originOpt ? `／${originOpt.label}` : ''}</span></div>
     <div class="why-op">＋</div>
-    <div class="why-step"><span class="why-k">使ったデータ</span><span class="why-v why-src">${OPEN_DATA.datasets.map(d => `<a href="${d.url}" target="_blank" rel="noopener">${d.label} — ${d.use}</a>`).join('')}</span></div>
+    <div class="why-step"><span class="why-k">使ったデータ</span><span class="why-v why-src">
+      ${OPEN_DATA.datasets.map(x => `<div class="why-row">
+        <a href="${x.url}" target="_blank" rel="noopener">${x.label} →</a>
+        <div class="why-how">${x.how}</div>
+        <div class="why-val">今回の値：${vals[x.key]}</div>
+      </div>`).join('')}
+    </span></div>
     <div class="why-op">＝</div>
     <div class="why-step"><span class="why-k">今日の一本</span><span class="why-v"><b>${r.name}</b></span></div>
+    <div class="why-note">※ 銘柄そのものは10問の回答（味の好み）だけで選んでいます。オープンデータは、選ばれた一本を土地の情報とあわせて示すために使っています。</div>
   </div>`;
 }
 
