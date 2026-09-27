@@ -191,6 +191,13 @@ const LINE_FRIEND_LABEL = IS_MOBILE ? '石川県公式LINEを見る' : 'QRコー
 
 const OPEN_DATA = {
   catalogUrl: 'https://front.opendata.pref.ishikawa.lg.jp/',
+  // 市町別の指標（カタログのCSVを集計）
+  cityStats: {
+    '白山市': { shops: 10, spots: 27 },
+    '小松市': { shops: 1, spots: 12 },
+  },
+  shopsDataset: { label: 'いしかわ「旬の地場もの」もてなし協力店（県内121店）', url: 'https://ckan.opendata.pref.ishikawa.lg.jp/dataset/170003_shun_jiba_shop' },
+  spotsDataset: { label: '観光施設一覧（白山市・小松市）', url: 'https://ckan.opendata.pref.ishikawa.lg.jp/dataset/172103-tourism' },
   datasets: [
     { key: 'domestic', label: '発地別入り込み客数（石川県・令和4年）', url: 'https://ckan.opendata.pref.ishikawa.lg.jp/dataset/170003_kankou_irikomi_domestic',
       how: '最後の質問「どちらからお越しですか？」の回答と突き合わせ、あなたの地域から石川を訪れた人数と割合を出しています。' },
@@ -299,7 +306,7 @@ const DIAG_COUNT = 10;
 // ============================================================
 // state
 // ============================================================
-const state = { page: 'intro', questions: [], qi: 0, answers: {}, result: null, mapBrewery: null, prevPage: 'intro', lineSheet: false, lineSheetShown: false };
+const state = { page: 'intro', questions: [], qi: 0, answers: {}, result: null, draw: null, mapBrewery: null, prevPage: 'intro', lineSheet: false, lineSheetShown: false };
 
 function shuffle(arr) {
   const a = [...arr];
@@ -322,14 +329,32 @@ function answer(key, value) {
     set({ answers, qi: next });
   }
 }
+// 同点の候補は、産地の指標（オープンデータ）を重みにして引く
+function drawByOpenData(top, origin) {
+  if (top.length === 1) return { pick: top[0], draw: null };
+  const localish = origin === 'pref' || origin === 'neighbor';
+  const metric = localish ? 'shops' : 'spots';
+  const metricLabel = localish ? '産地の「旬の地場もの」もてなし協力店の数' : '産地の観光施設の数';
+  const metricUnit = localish ? '店' : '施設';
+  const cityOf = s => (BREWERY_INFO[s.brewery] || {}).region.city;
+  const weights = top.map(s => Math.max(1, ((OPEN_DATA.cityStats[cityOf(s)] || {})[metric]) || 1));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let t = Math.random() * total, i = 0;
+  while (i < weights.length - 1 && t > weights[i]) { t -= weights[i]; i++; }
+  const uniq = [...new Set(top.map(cityOf))];
+  const cities = uniq.map(c => `${c} ${(OPEN_DATA.cityStats[c] || {})[metric] ?? '—'}${metricUnit}`).join('／');
+  return { pick: top[i], draw: { count: top.length, metric, metricLabel, cities, city: cityOf(top[i]), sameCity: uniq.length === 1 } };
+}
+
 function computeResult(answers) {
   const keys = Object.keys(answers).filter(k => k !== 'origin'); // おまけ質問は診断に使わない
   const scored = SAKE_DB.map(s => ({ ...s, score: keys.filter(k => s[k] === answers[k]).length / keys.length }));
   const max = Math.max(...scored.map(s => s.score));
   const top = scored.filter(s => s.score === max);
-  set({ result: top[Math.floor(Math.random() * top.length)], page: 'result' });
+  const { pick, draw } = drawByOpenData(top, answers.origin);
+  set({ result: pick, draw, page: 'result' });
 }
-function restart() { setupQuestions(); set({ page: 'intro', qi: 0, answers: {}, result: null }); }
+function restart() { setupQuestions(); set({ page: 'intro', qi: 0, answers: {}, result: null, draw: null }); }
 function openSub(page) { set({ prevPage: state.page, page }); }
 function closeSub() { set({ page: state.prevPage }); }
 function selectPin(i) { const p = MAP_PINS[i]; if (p.active) set({ mapBrewery: p.key }); }
@@ -451,9 +476,16 @@ function whyBlock(r) {
         <div class="why-val">今回の値：${vals[x.key]}</div>
       </div>`).join('')}
     </span></div>
-    <div class="why-op">＝</div>
+    ${state.draw ? `<div class="why-step"><span class="why-k">データで抽選</span><span class="why-v why-src"><div class="why-row">
+        <a href="${state.draw.metric === 'shops' ? OPEN_DATA.shopsDataset.url : OPEN_DATA.spotsDataset.url}" target="_blank" rel="noopener">${state.draw.metric === 'shops' ? OPEN_DATA.shopsDataset.label : OPEN_DATA.spotsDataset.label} →</a>
+        <div class="why-how">回答だけでは${state.draw.count}本が同点になりました。${state.draw.sameCity ? `候補はいずれも${state.draw.city}の一本だったため、産地は同じまま、みくじが1本を引いています。` : `${state.draw.metricLabel}を重みにして、みくじが1本を引いています。`}</div>
+        <div class="why-val">今回の値：${state.draw.cities}${state.draw.sameCity ? '' : ` → <b>${state.draw.city}</b>の一本に決定`}</div>
+      </div></span></div>
+    <div class="why-op">＝</div>` : '<div class="why-op">＝</div>'}
     <div class="why-step"><span class="why-k">今日の一本</span><span class="why-v"><b>${r.name}</b></span></div>
-    <div class="why-note">※ 銘柄そのものは10問の回答（味の好み）だけで選んでいます。オープンデータは、選ばれた一本を土地の情報とあわせて示すために使っています。</div>
+    <div class="why-note">${state.draw
+      ? '※ 味の好みは10問の回答で絞り込み、同点になった候補はオープンデータを重みにした抽選で1本にしています。'
+      : '※ 今回は回答だけで1本に絞れました。同点の候補が並んだときは、オープンデータを重みにした抽選で決めています。'}</div>
   </div>`;
 }
 
@@ -495,6 +527,7 @@ function viewResult() {
     <div class="map-link" data-act="map">地酒マップで立ち位置を見る</div>
     <div class="share-row"><div class="share-btn primary" data-act="line-recommend">友だちに勧める</div><div class="share-btn line" data-act="line-save">LINEで保存</div></div>
     <div class="share-note">「LINEで保存」でKeepメモに残せば、酒屋さんで見せられます</div>
+    ${lineCard()}
     <div class="ghost-btn" data-act="restart">もう一度診断する</div>
   </div>`;
 }
